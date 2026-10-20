@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Join your team</title>
+<style>
+  :root { --bg:#f5f6fa; --card:#fff; --text:#1b1f2a; --muted:#667; --accent:#3057e8; --err:#c62828; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12141a; --card:#1c1f28; --text:#eceef5; --muted:#9aa; --accent:#6f8dff; --err:#ff8a80; } }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:16px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  main { width:100%; max-width:420px; background:var(--card); padding:28px 22px; border-radius:16px; box-shadow:0 4px 24px #0002; text-align:center; }
+  h1 { margin:0 0 6px; font-size:1.5rem; }
+  p { color:var(--muted); margin:0 0 20px; }
+  input, button { width:100%; font:inherit; padding:14px; border-radius:10px; }
+  input { border:1px solid #8886; background:transparent; color:inherit; margin-bottom:12px; }
+  button { border:0; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; }
+  .err { color:var(--err); min-height:1.2em; margin-top:10px; }
+  .team { font-size:5rem; font-weight:800; color:var(--accent); line-height:1; margin:8px 0; }
+  .hidden { display:none; }
+</style>
+</head>
+<body>
+<main>
+  <section id="form">
+    <h1>Join your team</h1>
+    <p>Enter your visa name to get your team.</p>
+    <form id="f">
+      <input id="name" placeholder="Visa name" maxlength="60" autocomplete="off" required>
+      <button id="btn">Submit</button>
+    </form>
+    <div class="err" id="err" role="alert"></div>
+  </section>
+  <section id="result" class="hidden">
+    <p id="hello"></p>
+    <div>Your team</div>
+    <div class="team" id="team"></div>
+    <p id="meta"></p>
+  </section>
+</main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  function show(e) {
+    $('form').classList.add('hidden');
+    $('result').classList.remove('hidden');
+    $('hello').textContent = e.name;
+    $('team').textContent = e.team;
+    $('meta').textContent = `You are number ${e.order}` + (e.duplicate ? ' (already registered)' : '');
+  }
+  try { const s = JSON.parse(localStorage.getItem('entry') || 'null'); if (s) show(s); } catch {}
+  $('f').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    $('err').textContent = ''; $('btn').disabled = true;
+    try {
+      const r = await fetch('/api/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: $('name').value }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'Something went wrong');
+      try { localStorage.setItem('entry', JSON.stringify(d)); } catch {}
+      show(d);
+    } catch (e) { $('err').textContent = e.message; }
+    $('btn').disabled = false;
+  });
+</script>
+</body>
+</html>

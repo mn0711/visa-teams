@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin - Teams</title>
+<style>
+  :root { --bg:#f5f6fa; --card:#fff; --text:#1b1f2a; --muted:#667; --accent:#3057e8; --line:#8883; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12141a; --card:#1c1f28; --text:#eceef5; --muted:#9aa; --accent:#6f8dff; } }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:16px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; display:grid; gap:16px; grid-template-columns: 340px 1fr; }
+  @media (max-width:800px) { .wrap { grid-template-columns:1fr; } }
+  .card { background:var(--card); padding:20px; border-radius:16px; box-shadow:0 4px 24px #0002; }
+  h1,h2 { margin:0 0 12px; font-size:1.2rem; }
+  #qr svg { width:100%; height:auto; background:#fff; border-radius:8px; }
+  #url { word-break:break-all; color:var(--muted); font-size:.85rem; margin-top:8px; }
+  table { width:100%; border-collapse:collapse; }
+  th,td { text-align:left; padding:8px 6px; border-bottom:1px solid var(--line); }
+  td.team { font-weight:700; color:var(--accent); }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
+  .bar span { color:var(--muted); margin-right:auto; }
+  button, a.btn { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:transparent; color:inherit; cursor:pointer; text-decoration:none; }
+  button.danger { color:#c62828; }
+  .scroll { max-height:70vh; overflow:auto; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>Scan to join</h1>
+    <div id="qr"></div>
+    <div id="url"></div>
+  </div>
+  <div class="card">
+    <div class="bar">
+      <h2 style="margin:0">Participants</h2>
+      <span id="count"></span>
+      <a class="btn" href="/api/admin/export.csv">CSV</a>
+      <button class="danger" id="reset">Reset</button>
+    </div>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>#</th><th>Visa name</th><th>Team</th><th>Time</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  async function load() {
+    const r = await fetch('/api/admin/entries');
+    if (!r.ok) return;
+    const list = await r.json();
+    $('count').textContent = `${list.length} total`;
+    const tb = $('rows');
+    tb.replaceChildren(...list.slice().reverse().map((e) => {
+      const tr = document.createElement('tr');
+      [e.order, e.name, e.team, new Date(e.createdAt).toLocaleTimeString()].forEach((v, i) => {
+        const td = document.createElement('td');
+        if (i === 2) td.className = 'team';
+        td.textContent = v; tr.appendChild(td);
+      });
+      return tr;
+    }));
+  }
+  (async () => {
+    const q = await (await fetch('/api/admin/qr')).json();
+    $('qr').innerHTML = q.svg;
+    $('url').textContent = q.url;
+  })();
+  $('reset').onclick = async () => {
+    if (!confirm('Delete ALL entries and restart numbering from 1?')) return;
+    await fetch('/api/admin/reset', { method: 'POST' });
+    load();
+  };
+  load(); setInterval(load, 3000);
+</script>
+</body>
+</html>

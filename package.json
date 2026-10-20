@@ -1,0 +1,13 @@
+{
+  "name": "visa-teams",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scan a QR code, enter a visa name, get an order number and a team (last digit of the order).",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "qrcode": "1.5.4"
+  }
+}
