@@ -18,10 +18,16 @@
   button:disabled { opacity:.6; }
   .err { color:var(--err); min-height:1.2em; margin-top:10px; }
   .team { font-size:5rem; font-weight:800; color:var(--accent); line-height:1; margin:8px 0; }
+  .tname { font-size:1.6rem; font-weight:700; margin-bottom:12px; }
+  .avatar { width:170px; height:170px; margin:0 auto 6px; }
+  .avatar svg { width:100%; height:100%; }
+  body.themed main { background:color-mix(in srgb, var(--card) 82%, transparent); backdrop-filter:blur(3px); position:relative; z-index:1; }
+  #bg { position:fixed; inset:-30px; opacity:.55; filter:blur(7px); background-size:120px 120px; z-index:0; transition:opacity .4s; }
   .hidden { display:none; }
 </style>
 </head>
 <body>
+<div id="bg" class="hidden"></div>
 <main>
   <section id="form">
     <h1>Join your team</h1>
@@ -34,11 +40,14 @@
   </section>
   <section id="result" class="hidden">
     <p id="hello"></p>
+    <div class="avatar" id="avatar"></div>
     <div>Your team</div>
     <div class="team" id="team"></div>
+    <div class="tname" id="tname"></div>
     <p id="meta"></p>
   </section>
 </main>
+<script src="/avatars.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   function show(e) {
@@ -46,6 +55,18 @@
     $('result').classList.remove('hidden');
     $('hello').textContent = e.name;
     $('team').textContent = e.team;
+    $('tname').textContent = e.teamName || '';
+    const art = (window.TEAM_AVATARS || {})[e.team] || '';
+    $('avatar').innerHTML = art;
+    // Team-themed page: team colour + the team's chibi artwork tiled as the background.
+    const m = /r="48" fill="(#[0-9a-fA-F]+)"/.exec(art);
+    if (art && m) {
+      document.body.style.backgroundColor = m[1];
+      const bg = $('bg');
+      bg.style.backgroundImage = `url("data:image/svg+xml;utf8,${encodeURIComponent(art)}")`;
+      bg.classList.remove('hidden');
+      document.body.classList.add('themed');
+    }
     $('meta').textContent = `You are number ${e.order}` + (e.duplicate ? ' (already registered)' : '');
   }
   try { const s = JSON.parse(localStorage.getItem('entry') || 'null'); if (s) show(s); } catch {}

@@ -19,7 +19,14 @@ if (!process.env.ADMIN_PASSWORD) console.warn('WARNING: ADMIN_PASSWORD not set, 
 // ---- storage ----
 // Rule: team = last digit of the order number (11 -> 1, 33 -> 3, 20 -> 0).
 const teamOf = (order) => order % 10;
-const norm = (name) => name.toLowerCase();
+// Funny team names, index = team digit (0-9). Override with TEAM_NAMES="a,b,c,...,j" (10 comma-separated names).
+const DEFAULT_TEAM_NAMES = ['Bánh Chưng Bánh Giầy', 'Phở Không Hành', 'Trà Đá Vỉa Hè', 'Cà Phê Muối', 'Chú Cuội Cung Trăng',
+  'Thánh Gióng Phi Ngựa', 'Sơn Tinh Thủy Tinh', 'Trạng Quỳnh', 'Ông Táo Lên Trời', 'Cóc Kiện Trời'];
+const custom = (process.env.TEAM_NAMES || '').split(',').map((n) => n.trim());
+const TEAM_NAMES = custom.length === 10 && custom.every(Boolean) ? custom : DEFAULT_TEAM_NAMES;
+const named = (e) => ({ ...e, teamName: TEAM_NAMES[e.team] });
+// Comparison key: Unicode-normalised, lower case, all whitespace removed ("Anna  Le" == "annale").
+const norm = (name) => name.normalize('NFC').toLowerCase().replace(/\s+/g, '');
 
 // File backend (single process => assigning the next order is atomic).
 function fileStore() {
@@ -132,6 +139,8 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
   try {
+    if (req.method === 'GET' && p === '/avatars.js') return serveFile(res, 'avatars.js');
+    if (req.method === 'GET' && p === '/api/teams') return send(res, 200, TEAM_NAMES);
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
     // End-user
     if (req.method === 'GET' && (p === '/' || p === '/join')) return serveFile(res, 'index.html');
@@ -139,14 +148,15 @@ const server = http.createServer(async (req, res) => {
       const body = await readJson(req);
       const name = String(body.name || '').trim().replace(/\s+/g, ' ');
       if (!name || name.length > 60) return send(res, 400, { error: 'Please enter a visa name (max 60 characters).' });
-      // Same name submitted again (case-insensitive) returns the existing result instead of a new number.
+      // A name already in the list (compared by norm()) is rejected, no new number is issued.
       const { entry, duplicate } = await store.register(name);
-      return duplicate ? send(res, 200, { ...entry, duplicate: true }) : send(res, 201, entry);
+      if (duplicate) return send(res, 409, { error: 'This visa name is already registered. Please check your name.' });
+      return send(res, 201, named(entry));
     }
 
     // Admin
     if (p === '/admin' && req.method === 'GET') return requireAdmin(req, res) && serveFile(res, 'admin.html');
-    if (p === '/api/admin/entries' && req.method === 'GET') return requireAdmin(req, res) && send(res, 200, await store.list());
+    if (p === '/api/admin/entries' && req.method === 'GET') return requireAdmin(req, res) && send(res, 200, (await store.list()).map(named));
     if (p === '/api/admin/qr' && req.method === 'GET') {
       if (!requireAdmin(req, res)) return;
       const joinUrl = `${publicBase(req)}/join`;
@@ -155,10 +165,10 @@ const server = http.createServer(async (req, res) => {
     }
     if (p === '/api/admin/export.csv' && req.method === 'GET') {
       if (!requireAdmin(req, res)) return;
-      const entries = await store.list();
-      const rows = ['order,visa_name,team,submitted_at', ...entries.map((e) => [e.order, csvCell(e.name), e.team, e.createdAt].join(','))];
+      const entries = (await store.list()).map(named);
+      const rows = ['order,visa_name,team,team_name,submitted_at', ...entries.map((e) => [e.order, csvCell(e.name), e.team, csvCell(e.teamName), e.createdAt].join(','))];
       res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="visa-teams.csv"' });
-      return res.end(rows.join('\n'));
+      return res.end('﻿' + rows.join('\n')); // BOM so Excel reads UTF-8 accents
     }
     if (p === '/api/admin/reset' && req.method === 'POST') {
       if (!requireAdmin(req, res)) return;

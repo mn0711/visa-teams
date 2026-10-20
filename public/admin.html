@@ -8,8 +8,8 @@
   :root { --bg:#f5f6fa; --card:#fff; --text:#1b1f2a; --muted:#667; --accent:#3057e8; --line:#8883; }
   @media (prefers-color-scheme: dark) { :root { --bg:#12141a; --card:#1c1f28; --text:#eceef5; --muted:#9aa; --accent:#6f8dff; } }
   * { box-sizing: border-box; }
-  body { margin:0; padding:16px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
-  .wrap { max-width:960px; margin:0 auto; display:grid; gap:16px; grid-template-columns: 340px 1fr; }
+  body { margin:0; padding:12px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  .wrap { max-width:none; margin:0 auto; display:grid; gap:16px; grid-template-columns: 280px 1fr; align-items:start; }
   @media (max-width:800px) { .wrap { grid-template-columns:1fr; } }
   .card { background:var(--card); padding:20px; border-radius:16px; box-shadow:0 4px 24px #0002; }
   h1,h2 { margin:0 0 12px; font-size:1.2rem; }
@@ -23,6 +23,22 @@
   button, a.btn { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:transparent; color:inherit; cursor:pointer; text-decoration:none; }
   button.danger { color:#c62828; }
   .scroll { max-height:70vh; overflow:auto; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  #view-teams { max-height:none; overflow:visible; }
+  .teams { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; }
+  @media (min-width:1300px) { .teams { grid-template-columns:repeat(5,1fr); } }
+  .team-card { border:1px solid var(--line); border-radius:12px; padding:12px; }
+  .team-card.empty { opacity:.45; }
+  .team-card h3 { margin:0 0 8px; font-size:1rem; display:flex; justify-content:space-between; }
+  .team-card h3 b { color:var(--accent); }
+  .team-card ol { margin:0; padding:0; list-style:none; }
+  .team-card li { padding:4px 0; border-top:1px solid var(--line); font-size:.92rem; word-break:break-word; }
+  .team-card li small { color:var(--muted); margin-right:6px; }
+  .ava { display:block; margin:0 auto 6px; width:84px; height:84px; }
+  .ava svg, .ava-sm svg { width:100%; height:100%; }
+  .ava-sm { display:inline-block; width:30px; height:30px; vertical-align:middle; margin-right:8px; }
+  .hidden { display:none; }
 </style>
 </head>
 <body>
@@ -39,14 +55,20 @@
       <a class="btn" href="/api/admin/export.csv">CSV</a>
       <button class="danger" id="reset">Reset</button>
     </div>
-    <div class="scroll">
+    <div class="tabs">
+      <button id="tab-list" class="on">List</button>
+      <button id="tab-teams">By team</button>
+    </div>
+    <div class="scroll" id="view-list">
       <table>
-        <thead><tr><th>#</th><th>Visa name</th><th>Team</th><th>Time</th></tr></thead>
+        <thead><tr><th>#</th><th>Visa name</th><th>Team</th><th>Team name</th><th>Time</th></tr></thead>
         <tbody id="rows"></tbody>
       </table>
     </div>
+    <div class="scroll hidden" id="view-teams"><div class="teams" id="teams"></div></div>
   </div>
 </div>
+<script src="/avatars.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   async function load() {
@@ -54,17 +76,58 @@
     if (!r.ok) return;
     const list = await r.json();
     $('count').textContent = `${list.length} total`;
+    renderTeams(list);
     const tb = $('rows');
     tb.replaceChildren(...list.slice().reverse().map((e) => {
       const tr = document.createElement('tr');
-      [e.order, e.name, e.team, new Date(e.createdAt).toLocaleTimeString()].forEach((v, i) => {
+      [e.order, e.name, e.team, e.teamName, new Date(e.createdAt).toLocaleTimeString()].forEach((v, i) => {
         const td = document.createElement('td');
-        if (i === 2) td.className = 'team';
-        td.textContent = v; tr.appendChild(td);
+        if (i === 2 || i === 3) td.className = 'team';
+        if (i === 3) {
+          const av = document.createElement('span'); av.className = 'ava-sm';
+          av.innerHTML = (window.TEAM_AVATARS || {})[e.team] || ''; td.appendChild(av);
+          td.appendChild(document.createTextNode(v));
+        } else td.textContent = v;
+        tr.appendChild(td);
       });
       return tr;
     }));
   }
+  let teamNames = [];
+  fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; }).catch(() => {});
+  function renderTeams(list) {
+    const groups = {};
+    list.forEach((e) => (groups[e.team] = groups[e.team] || []).push(e));
+    $('teams').replaceChildren(...[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((t) => {
+      const members = groups[t] || [];
+      const card = document.createElement('div');
+      card.className = 'team-card' + (members.length ? '' : ' empty');
+      const h = document.createElement('h3');
+      h.innerHTML = '<b></b><span></span>';
+      h.firstChild.textContent = `Team ${t}` + (teamNames[t] ? ` · ${teamNames[t]}` : '');
+      h.lastChild.textContent = members.length;
+      const ol = document.createElement('ol');
+      members.forEach((m) => {
+        const li = document.createElement('li');
+        const n = document.createElement('small'); n.textContent = `#${m.order}`;
+        li.append(n, m.name); ol.appendChild(li);
+      });
+      const av = document.createElement('div'); av.className = 'ava';
+      av.innerHTML = (window.TEAM_AVATARS || {})[t] || '';
+      card.append(av, h, ol);
+      return card;
+    }));
+  }
+  function setTab(name) {
+    $('view-list').classList.toggle('hidden', name !== 'list');
+    $('view-teams').classList.toggle('hidden', name !== 'teams');
+    $('tab-list').classList.toggle('on', name === 'list');
+    $('tab-teams').classList.toggle('on', name === 'teams');
+    try { localStorage.setItem('adminTab', name); } catch {}
+  }
+  $('tab-list').onclick = () => setTab('list');
+  $('tab-teams').onclick = () => setTab('teams');
+  try { setTab(localStorage.getItem('adminTab') === 'teams' ? 'teams' : 'list'); } catch {}
   (async () => {
     const q = await (await fetch('/api/admin/qr')).json();
     $('qr').innerHTML = q.svg;
