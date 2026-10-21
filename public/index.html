@@ -69,7 +69,18 @@
     }
     $('meta').textContent = `You are number ${e.order}` + (e.duplicate ? ' (already registered)' : '');
   }
-  try { const s = JSON.parse(localStorage.getItem('entry') || 'null'); if (s) show(s); } catch {}
+  // Show a saved result only if the server still has it (an admin Reset invalidates old results).
+  (async () => {
+    let s = null;
+    try { s = JSON.parse(localStorage.getItem('entry') || 'null'); } catch {}
+    if (!s) return;
+    try {
+      const r = await fetch(`/api/check?order=${encodeURIComponent(s.order)}&name=${encodeURIComponent(s.name)}`, { cache: 'no-store' });
+      const d = await r.json();
+      if (d.valid) { try { localStorage.setItem('entry', JSON.stringify(d.entry)); } catch {} show(d.entry); }
+      else { try { localStorage.removeItem('entry'); } catch {} }
+    } catch { show(s); } // offline / server asleep: keep showing the saved result
+  })();
   $('f').addEventListener('submit', async (ev) => {
     ev.preventDefault();
     $('err').textContent = ''; $('btn').disabled = true;

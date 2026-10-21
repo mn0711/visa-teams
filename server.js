@@ -47,6 +47,7 @@ function fileStore() {
       save();
       return { entry, duplicate: false };
     },
+    async get(order) { return entries.find((e) => e.order === order) || null; },
     async list() { return entries; },
     async reset() { entries = []; save(); },
   };
@@ -78,6 +79,7 @@ function redisStore(url, token) {
       await cmd('HSET', K.entries, String(order), JSON.stringify(entry));
       return { entry, duplicate: false };
     },
+    async get(order) { return getByOrder(order); },
     async list() {
       const vals = await cmd('HVALS', K.entries);
       return vals.map((v) => JSON.parse(v)).sort((a, b) => a.order - b.order);
@@ -140,6 +142,13 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
   try {
     if (req.method === 'GET' && p === '/avatars.js') return serveFile(res, 'avatars.js');
+    if (req.method === 'GET' && p === '/api/check') {
+      // Is a result saved on a phone still in the list? (false after an admin Reset)
+      const order = Number(url.searchParams.get('order'));
+      const name = String(url.searchParams.get('name') || '');
+      const entry = Number.isInteger(order) ? await store.get(order) : null;
+      return send(res, 200, entry && norm(entry.name) === norm(name) ? { valid: true, entry: named(entry) } : { valid: false });
+    }
     if (req.method === 'GET' && p === '/api/teams') return send(res, 200, TEAM_NAMES);
     if (p === '/health') return send(res, 200, 'ok', 'text/plain');
     // End-user
