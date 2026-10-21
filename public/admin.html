@@ -38,13 +38,19 @@
   .ava { display:block; margin:0 auto 6px; width:84px; height:84px; }
   .ava svg, .ava-sm svg { width:100%; height:100%; }
   .ava-sm { display:inline-block; width:30px; height:30px; vertical-align:middle; margin-right:8px; }
+  .qr-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
+  .qr-head h1 { margin:0; }
+  #qr-full { position:fixed; inset:0; z-index:100; background:#fff; color:#111; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:16px; }
+  #qr-full svg { width:min(80vw,72vh); height:min(80vw,72vh); }
+  #qr-full .u { font-size:clamp(1rem,2.2vw,1.8rem); word-break:break-all; text-align:center; }
+  #qr-full button { position:absolute; top:12px; right:12px; color:#111; border-color:#8886; }
   .hidden { display:none; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>Scan to join</h1>
+    <div class="qr-head"><h1>Scan to join</h1><button id="qr-expand" title="Show QR full screen">⛶ Full screen</button></div>
     <div id="qr"></div>
     <div id="url"></div>
   </div>
@@ -56,8 +62,8 @@
       <button class="danger" id="reset">Reset</button>
     </div>
     <div class="tabs">
-      <button id="tab-list" class="on">List</button>
-      <button id="tab-teams">By team</button>
+      <button id="tab-teams" class="on">By team</button>
+      <button id="tab-list">List</button>
     </div>
     <div class="scroll" id="view-list">
       <table>
@@ -67,6 +73,11 @@
     </div>
     <div class="scroll hidden" id="view-teams"><div class="teams" id="teams"></div></div>
   </div>
+</div>
+<div id="qr-full" class="hidden" role="dialog" aria-label="QR code">
+  <button id="qr-close">✕ Close</button>
+  <div id="qr-big"></div>
+  <div class="u" id="qr-url"></div>
 </div>
 <script src="/avatars.js"></script>
 <script>
@@ -123,11 +134,25 @@
     $('view-teams').classList.toggle('hidden', name !== 'teams');
     $('tab-list').classList.toggle('on', name === 'list');
     $('tab-teams').classList.toggle('on', name === 'teams');
-    try { localStorage.setItem('adminTab', name); } catch {}
+    try { localStorage.setItem('adminTab2', name); } catch {}
   }
   $('tab-list').onclick = () => setTab('list');
   $('tab-teams').onclick = () => setTab('teams');
-  try { setTab(localStorage.getItem('adminTab') === 'teams' ? 'teams' : 'list'); } catch {}
+  try { setTab(localStorage.getItem('adminTab2') === 'list' ? 'list' : 'teams'); } catch { setTab('teams'); }
+  function closeQr() {
+    $('qr-full').classList.add('hidden');
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  }
+  $('qr-expand').onclick = () => {
+    $('qr-big').innerHTML = $('qr').innerHTML;
+    $('qr-url').textContent = $('url').textContent;
+    $('qr-full').classList.remove('hidden');
+    try { $('qr-full').requestFullscreen(); } catch {}  // true browser full screen where supported
+  };
+  $('qr-close').onclick = closeQr;
+  $('qr-full').addEventListener('click', (e) => { if (e.target === $('qr-full')) closeQr(); });
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) $('qr-full').classList.add('hidden'); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeQr(); });
   (async () => {
     const q = await (await fetch('/api/admin/qr')).json();
     $('qr').innerHTML = q.svg;
