@@ -33,10 +33,33 @@
   .hist svg { width:44px; height:66px; }
   .teams { width:100%; max-width:1100px; display:grid; grid-template-columns:repeat(10,1fr); gap:6px; }
   @media (max-width:800px) { .teams { grid-template-columns:repeat(5,1fr); } }
-  .chip { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 2px; text-align:center; font-size:.75rem; color:var(--muted); }
-  .chip b { display:block; color:var(--text); font-size:1.1rem; }
+  .chip { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 4px 8px; text-align:center; font-size:.75rem; color:var(--muted); position:relative; overflow:hidden; }
+  .chip b { display:block; color:var(--text); font-size:1.5rem; line-height:1.1; }
   .chip svg { width:34px; height:34px; display:block; margin:0 auto 2px; }
-  .chip.hit { outline:3px solid var(--gold); background:#3a3012; color:var(--text); transform:scale(1.08); }
+  .chip i { display:block; height:5px; border-radius:3px; margin-top:4px; background:#3f9d3a; transition:width .4s; }
+  .chip.low i { background:#f5a31a; } .chip.crit i { background:#e0262c; }
+  .chip.hit { outline:3px solid var(--gold); background:#3a3012; color:var(--text); transform:scale(1.06); }
+  .chip.won { outline:3px solid var(--gold); background:#4a3a08; }
+  .action { width:100%; max-width:1100px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .action .who { font-size:clamp(1.3rem,3vw,2rem); font-weight:800; }
+  .action .person { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .action .person .pava { width:84px; height:84px; } .action .person .pava svg { width:100%; height:100%; }
+  .action .pname { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; color:var(--gold); }
+  .action .spin { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; color:var(--muted); min-height:1.4em; }
+  .action .row { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  .action input[type=number], .top input[type=number] { font:inherit; width:110px; padding:10px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; text-align:center; font-size:1.2rem; }
+  .top input[type=number] { width:70px; padding:6px; font-size:1rem; }
+  button.primary { background:var(--gold); color:#111; border:0; font-weight:800; }
+  .err { color:#ff8a80; min-height:1.2em; }
+  .log { width:100%; max-width:1100px; font-size:.9rem; color:var(--muted); display:grid; gap:2px; }
+  .pool { width:100%; max-width:1100px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
+  .pool summary { cursor:pointer; color:var(--muted); }
+  .pool textarea { width:100%; min-height:90px; margin:8px 0; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; padding:8px; font:inherit; }
+  #win { position:fixed; inset:0; z-index:50; background:#000c; display:flex; align-items:center; justify-content:center; padding:16px; }
+  #win .box { background:var(--panel); border:3px solid var(--gold); border-radius:20px; padding:28px; text-align:center; max-width:520px; }
+  #win .box h2 { font-size:clamp(1.6rem,4vw,2.6rem); margin:0 0 6px; color:var(--gold); }
+  #win .ava { width:170px; height:170px; }
+  .hidden { display:none !important; }
 </style>
 </head>
 <body>
@@ -46,7 +69,9 @@
     <select id="sp"><option value="5">5%</option><option value="8" selected>8%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option></select>
   </label>
   <button id="fs">⛶ Full screen</button>
-  <button id="reset">Reset rounds</button>
+  <label>Cards per team <input id="start" type="number" min="1" max="200" value="40"></label>
+  <button id="undo">&#8630; Undo last</button>
+  <button id="reset">New game</button>
   <a class="btn" href="/admin">← Admin</a>
 </div>
 
@@ -58,9 +83,23 @@
   </div>
 </div>
 
+<div class="action hidden" id="action"></div>
 <button class="draw" id="draw">Draw card <small>(Space)</small></button>
 <div class="hist" id="hist" aria-label="Previous cards"></div>
 <div class="teams" id="teams"></div>
+<div class="log" id="log"></div>
+<details class="pool" id="pool">
+  <summary>Pick pool: <span id="poolInfo">loading...</span></summary>
+  <p style="color:var(--muted);margin:8px 0 0">Registered participants are always in the pool. To add more people, enter one per line as <b>Name, team</b> (team 1-10).</p>
+  <textarea id="extra" placeholder="Anna Le, 3&#10;Binh Tran, 10"></textarea>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button id="addExtra">Add names</button>
+    <button id="clearExtra">Remove added names</button>
+    <button id="clearPicked">Allow everyone to be picked again</button>
+  </div>
+  <div class="err" id="poolMsg" style="color:var(--muted)"></div>
+</details>
+<div id="win" class="hidden"></div>
 
 <script src="/avatars.js"></script>
 <script>
@@ -75,7 +114,7 @@
   const PLAIN_CHANCE = 0.10;               // plain number-only cards (no option)
   const teamNo = (n) => (n === 0 ? 10 : n); // number 0 = team 10
   let teamNames = [];
-  fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; buildChips(); }).catch(() => {});
+  fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; if (typeof renderAll === 'function') renderAll(); }).catch(() => {});
 
   // Unbiased random helpers
   function rnd() { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 2 ** 32; }
@@ -116,8 +155,18 @@
       corner(false) + corner(true) + badgeG(false) + badgeG(true) + `</svg>`;
   }
 
-  // ---------- game state ----------
-  let round = 0, history = [];
+  // ---------- game state (saved in this browser) ----------
+  const KEY = 'unoGame.v1';
+  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], extras: [], log: [], round: 0, history: [], current: null, won: null });
+  let S = fresh();
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && Array.isArray(s.counts) && s.counts.length === 10) S = { ...fresh(), ...s };
+  } catch {}
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
+  const nkey = (name) => name.normalize('NFC').toLowerCase().replace(/\s+/g, '');
+  const nameOf = (t) => (teamNames[t] ? ` · ${teamNames[t]}` : '');
+
   function newCard() {
     const r = rnd(), sp = Number($('sp').value) / 100;
     if (r < sp) return { type:'special', number:ri(10) };
@@ -128,6 +177,7 @@
   }
   function setInfo(c) {
     const info = $('info'); info.replaceChildren();
+    if (!c) { info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to draw the first card.</div>'; return; }
     const big = document.createElement('div'); big.className = 'big';
     const sub = document.createElement('div'); sub.className = 'sub';
     const hint = document.createElement('div'); hint.className = 'hint';
@@ -149,47 +199,205 @@
       const col = COLORS[c.option.value];
       big.append('CHECK COLOUR');
       const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, col.name);
-      sub.textContent = `Every team discards ALL their ${col.name} cards.`;
+      sub.textContent = `Teams that hold ${col.name} cards can discard them all.`;
     } else {
       big.textContent = `CHECK NUMBER ${c.option.value}`;
-      sub.textContent = `Every team discards ALL their cards numbered ${c.option.value}.`;
+      sub.textContent = `Teams that hold cards numbered ${c.option.value} can discard them all.`;
     }
     hint.textContent = 'Only the corner badge counts. The card face is ignored.';
     info.append(big, sub, hint);
   }
   function renderHist() {
-    $('hist').replaceChildren(...history.slice(1, 11).map((c) => {
+    $('hist').replaceChildren(...S.history.slice(0, 10).map((c) => {
       const d = document.createElement('div'); d.innerHTML = cardSvg(c); return d;
     }));
   }
-  function buildChips(hit) {
+  const currentTeam = () => {
+    const c = S.current;
+    if (!c || !c.pending) return null;
+    if (c.card.type === 'special') return c.card.number;
+    return c.person ? c.person.team : null;
+  };
+  function buildChips() {
+    const cur = currentTeam();
     $('teams').replaceChildren(...[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => {
-      const d = document.createElement('div'); d.className = 'chip' + (hit === n ? ' hit' : '');
+      const cnt = S.counts[n], ratio = cnt / S.start;
+      const d = document.createElement('div');
+      d.className = 'chip' + (cur === n ? ' hit' : '') + (S.won === n ? ' won' : '') + (ratio <= 0.25 ? ' crit' : ratio <= 0.5 ? ' low' : '');
       d.innerHTML = (window.TEAM_AVATARS || {})[n] || '';
-      const b = document.createElement('b'); b.textContent = n;
-      const s = document.createElement('span'); s.textContent = `Team ${teamNo(n)}`;
-      d.append(b, s); d.title = teamNames[n] || ''; return d;
+      const t = document.createElement('span'); t.textContent = `Team ${teamNo(n)}`;
+      const b = document.createElement('b'); b.textContent = cnt;
+      const bar = document.createElement('i'); bar.style.width = `${Math.max(0, Math.round(ratio * 100))}%`;
+      d.append(t, b, bar); d.title = teamNames[n] || ''; return d;
     }));
   }
-  function draw() {
-    const c = newCard();
-    history.unshift(c); round++;
-    $('round').textContent = `· Round ${round}`;
-    const card = $('card'); card.innerHTML = cardSvg(c);
-    card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip');
-    setInfo(c); renderHist(); buildChips(c.type === 'special' ? c.number : undefined);
+  function renderLog() {
+    $('log').replaceChildren(...S.log.slice(0, 8).map((e) => {
+      const d = document.createElement('div');
+      d.textContent = `R${e.round} · Team ${teamNo(e.team)}${e.special ? ' (special)' : e.person ? ' · ' + e.person : ''} · −${e.removed} → ${e.left} left`;
+      return d;
+    }));
   }
+  function renderWin() {
+    const w = $('win');
+    if (S.won == null) { w.classList.add('hidden'); w.replaceChildren(); return; }
+    w.classList.remove('hidden');
+    const box = document.createElement('div'); box.className = 'box';
+    const h = document.createElement('h2'); h.textContent = `🏆 Team ${teamNo(S.won)}${nameOf(S.won)} wins!`;
+    const ava = document.createElement('div'); ava.className = 'ava'; ava.style.margin = '0 auto'; ava.innerHTML = (window.TEAM_AVATARS || {})[S.won] || '';
+    const p = document.createElement('p'); p.textContent = 'All their cards are gone.'; p.style.color = 'var(--muted)';
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:center';
+    const u = document.createElement('button'); u.textContent = '↶ Undo last round'; u.onclick = undo;
+    const n = document.createElement('button'); n.className = 'primary'; n.textContent = 'New game'; n.onclick = newGame;
+    row.append(u, n); box.append(h, ava, p, row); w.replaceChildren(box);
+  }
+
+  // ---------- pick pool ----------
+  let registered = [], spinText = null, picking = false;
+  async function loadPool() {
+    try {
+      const r = await fetch('/api/admin/entries', { cache: 'no-store' });
+      if (r.ok) registered = (await r.json()).map((e) => ({ name: e.name, team: e.team }));
+    } catch {}
+    const seen = new Set(), all = [];
+    [...registered, ...S.extras].forEach((p) => { const k = nkey(p.name); if (!seen.has(k)) { seen.add(k); all.push(p); } });
+    const avail = all.filter((p) => !S.picked.includes(nkey(p.name)));
+    $('poolInfo').textContent = `${registered.length} registered + ${S.extras.length} added · ${avail.length} not picked yet`;
+    return { all, avail };
+  }
+  async function pickPerson() {
+    if (picking || !S.current || !S.current.pending) return;
+    picking = true;
+    let { all, avail } = await loadPool();
+    if (!all.length) { picking = false; alert('The pick pool is empty. Add names under "Pick pool" below.'); return; }
+    if (!avail.length) { S.picked = []; avail = all; $('poolMsg').textContent = 'Everyone has been picked once, starting a new cycle.'; }
+    const prev = S.current.person && nkey(S.current.person.name);
+    const choices = avail.length > 1 ? avail.filter((p) => nkey(p.name) !== prev) : avail;
+    const chosen = pick(choices);
+    const t0 = Date.now();
+    const timer = setInterval(() => {
+      if (Date.now() - t0 > 1200) {
+        clearInterval(timer); spinText = null; picking = false;
+        S.current.person = chosen; save(); renderAll();
+        return;
+      }
+      spinText = pick(all).name; renderAction();
+    }, 70);
+  }
+
+  // ---------- round actions ----------
+  function renderAction() {
+    const box = $('action'); box.replaceChildren();
+    const c = S.current;
+    if (!c) { box.classList.add('hidden'); return; }
+    box.classList.remove('hidden');
+    const add = (tag, cls, text, parent = box) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; parent.appendChild(e); return e; };
+    if (c.card.type === 'plain') { add('div', 'sub', 'No option this round, nothing to record. Draw the next card.'); return; }
+    if (!c.pending) { add('div', 'sub', '✓ Round recorded. Draw the next card.'); return; }
+    let team;
+    if (c.card.type === 'special') {
+      team = c.card.number;
+      add('div', 'who', `★ Special: Team ${teamNo(team)}${nameOf(team)}`);
+    } else {
+      if (spinText != null) { add('div', 'spin', spinText); return; }
+      if (!c.person) { add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
+      team = c.person.team;
+      const row = add('div', 'person');
+      const ava = add('div', 'pava', null, row); ava.innerHTML = (window.TEAM_AVATARS || {})[team] || '';
+      const txt = add('div', null, null, row);
+      add('div', 'pname', c.person.name, txt);
+      add('div', 'sub', `Team ${teamNo(team)}${nameOf(team)}`, txt);
+      add('button', null, '🎲 Pick again').onclick = pickPerson;
+    }
+    const left = S.counts[team];
+    const r = add('div', 'row');
+    add('span', 'sub', `Cards removed by Team ${teamNo(team)} (has ${left}):`, r);
+    const inp = add('input', null, null, r);
+    inp.type = 'number'; inp.id = 'removed'; inp.min = 0; inp.max = left; inp.inputMode = 'numeric'; inp.placeholder = '0';
+    inp.onkeydown = (e) => { if (e.key === 'Enter') confirmRound(); };
+    add('button', 'primary', 'Confirm', r).onclick = confirmRound;
+    add('div', 'err').id = 'err';
+    setTimeout(() => inp.focus(), 0);
+  }
+  function confirmRound() {
+    const c = S.current;
+    if (!c || !c.pending) return;
+    const team = c.card.type === 'special' ? c.card.number : c.person ? c.person.team : null;
+    if (team == null) return;
+    const raw = $('removed').value;
+    const n = Number(raw === '' ? 0 : raw);
+    if (!Number.isInteger(n) || n < 0 || n > S.counts[team]) { $('err').textContent = `Enter a whole number from 0 to ${S.counts[team]}.`; return; }
+    S.counts[team] -= n;
+    if (c.person) S.picked.push(nkey(c.person.name));
+    S.log.unshift({ round: S.round, team, removed: n, left: S.counts[team], special: c.card.type === 'special',
+                    person: c.person ? c.person.name : null, personObj: c.person, card: c.card });
+    c.pending = false;
+    if (S.counts[team] === 0) S.won = team;
+    save(); renderAll(); loadPool();
+  }
+  function undo() {
+    const e = S.log.shift();
+    if (!e) return;
+    S.counts[e.team] += e.removed;
+    if (e.personObj) S.picked = S.picked.filter((k) => k !== nkey(e.personObj.name));
+    S.won = null;
+    S.current = { card: e.card, person: e.personObj || null, pending: true };
+    save(); renderAll(true); loadPool();
+  }
+  function draw() {
+    if (S.won != null || picking) return;
+    if (S.current && S.current.pending && !confirm('This round has not been recorded yet. Draw the next card anyway?')) return;
+    if (S.current) S.history.unshift(S.current.card);
+    S.history = S.history.slice(0, 10);
+    S.round++;
+    const c = newCard();
+    S.current = { card: c, person: null, pending: c.type !== 'plain' };
+    save(); renderAll(true);
+  }
+  function newGame() {
+    if ((S.log.length || S.round) && !confirm('Start a new game? Card counts and rounds will be reset.')) return;
+    const start = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
+    S = { ...fresh(start), extras: S.extras };
+    save(); renderAll(); loadPool();
+  }
+  function renderAll(animate) {
+    $('round').textContent = S.round ? `· Round ${S.round}` : '';
+    $('start').value = S.start;
+    const card = $('card');
+    card.innerHTML = S.current ? cardSvg(S.current.card) : '';
+    if (animate && S.current) { card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip'); }
+    setInfo(S.current && S.current.card);
+    renderHist(); renderAction(); buildChips(); renderLog(); renderWin();
+    $('draw').disabled = S.won != null;
+  }
+
+  // ---------- wiring ----------
   $('draw').onclick = draw;
+  $('undo').onclick = undo;
+  $('reset').onclick = newGame;
+  $('start').onchange = () => {
+    const v = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
+    if (S.log.length === 0 && S.won == null) { S.start = v; S.counts = Array(10).fill(v); save(); renderAll(); }
+    else { $('start').value = S.start; alert('Cards per team can only change before the first round is recorded. Use "New game" to restart with a new number.'); }
+  };
   document.addEventListener('keydown', (e) => {
-    if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON'].includes(document.activeElement.tagName)) { e.preventDefault(); draw(); }
+    if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA', 'SUMMARY'].includes(document.activeElement.tagName)) { e.preventDefault(); draw(); }
   });
   $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
-  $('reset').onclick = () => {
-    if (round && !confirm('Reset round counter and history?')) return;
-    round = 0; history = []; $('round').textContent = ''; $('card').innerHTML = ''; renderHist(); buildChips();
-    $('info').innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to draw the first card.</div>';
+  $('addExtra').onclick = () => {
+    const bad = []; let added = 0;
+    $('extra').value.split('\n').map((l) => l.trim()).filter(Boolean).forEach((l) => {
+      const i = l.lastIndexOf(',');
+      const name = i > 0 ? l.slice(0, i).trim().replace(/\s+/g, ' ') : '';
+      const t = Number(l.slice(i + 1));
+      if (name && Number.isInteger(t) && t >= 1 && t <= 10) { S.extras.push({ name, team: t % 10 }); added++; } else bad.push(l);
+    });
+    save(); $('extra').value = bad.join('\n'); loadPool();
+    $('poolMsg').textContent = `Added ${added}.` + (bad.length ? ` Skipped ${bad.length} line(s), use "Name, team 1-10".` : '');
   };
-  buildChips();
+  $('clearExtra').onclick = () => { S.extras = []; save(); loadPool(); $('poolMsg').textContent = 'Added names removed.'; };
+  $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
+  renderAll(); loadPool();
 </script>
 </body>
 </html>
