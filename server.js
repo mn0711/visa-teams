@@ -164,6 +164,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Admin
+    if (p === '/game' && req.method === 'GET') return requireAdmin(req, res) && serveFile(res, 'game.html');
     if (p === '/admin' && req.method === 'GET') return requireAdmin(req, res) && serveFile(res, 'admin.html');
     if (p === '/api/admin/entries' && req.method === 'GET') return requireAdmin(req, res) && send(res, 200, (await store.list()).map(named));
     if (p === '/api/admin/qr' && req.method === 'GET') {

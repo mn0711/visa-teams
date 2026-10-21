@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Uno Teams - Host</title>
+<style>
+  :root { --text:#eef0f6; --muted:#9aa3b8; --panel:#1a1f2d; --line:#ffffff22; --gold:#ffd23f; }
+  * { box-sizing: border-box; }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px;
+         background:radial-gradient(circle at 50% 25%, #1e2748, #0a0c13 70%); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  .top { width:100%; max-width:1100px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .top h1 { margin:0 auto 0 0; font-size:1.2rem; }
+  .top .round { color:var(--gold); font-weight:700; }
+  button, a.btn, select { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:inherit; cursor:pointer; text-decoration:none; }
+  label { color:var(--muted); font-size:.9rem; display:flex; align-items:center; gap:6px; }
+  .stage { flex:1; width:100%; max-width:1100px; display:flex; flex-wrap:wrap; gap:24px; align-items:center; justify-content:center; }
+  #card { height:min(66vh, 560px); aspect-ratio:2/3; filter:drop-shadow(0 18px 30px #000a); }
+  #card svg { width:100%; height:100%; display:block; }
+  #card.flip { animation:flip .5s ease; }
+  @keyframes flip { from { transform:rotateY(90deg) scale(.9); opacity:0; } to { transform:none; opacity:1; } }
+  .info { flex:1; min-width:260px; max-width:440px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; text-align:center; }
+  .info .big { font-size:clamp(1.6rem,3.6vw,2.6rem); font-weight:800; line-height:1.15; margin:4px 0 8px; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .info .sub { color:var(--muted); }
+  .info .hint { color:var(--muted); font-size:.85rem; margin-top:12px; }
+  .dot { width:.8em; height:.8em; border-radius:50%; display:inline-block; border:3px solid #fff; }
+  .special { color:var(--gold); }
+  .ava { width:130px; height:130px; margin:6px auto; }
+  .ava svg { width:100%; height:100%; }
+  .draw { font-size:1.4rem; font-weight:800; padding:16px 40px; background:var(--gold); color:#111; border:0; box-shadow:0 6px 0 #b8901a; }
+  .draw:active { transform:translateY(3px); box-shadow:0 3px 0 #b8901a; }
+  .hist { width:100%; max-width:1100px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; min-height:70px; }
+  .hist svg { width:44px; height:66px; }
+  .teams { width:100%; max-width:1100px; display:grid; grid-template-columns:repeat(10,1fr); gap:6px; }
+  @media (max-width:800px) { .teams { grid-template-columns:repeat(5,1fr); } }
+  .chip { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 2px; text-align:center; font-size:.75rem; color:var(--muted); }
+  .chip b { display:block; color:var(--text); font-size:1.1rem; }
+  .chip svg { width:34px; height:34px; display:block; margin:0 auto 2px; }
+  .chip.hit { outline:3px solid var(--gold); background:#3a3012; color:var(--text); transform:scale(1.08); }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>🎴 Uno Teams <span class="round" id="round"></span></h1>
+  <label>Special chance
+    <select id="sp"><option value="5">5%</option><option value="8" selected>8%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option></select>
+  </label>
+  <button id="fs">⛶ Full screen</button>
+  <button id="reset">Reset rounds</button>
+  <a class="btn" href="/admin">← Admin</a>
+</div>
+
+<div class="stage">
+  <div id="card"></div>
+  <div class="info" id="info">
+    <div class="big">Ready?</div>
+    <div class="sub">Press the button (or Space) to draw the first card.</div>
+  </div>
+</div>
+
+<button class="draw" id="draw">Draw card <small>(Space)</small></button>
+<div class="hist" id="hist" aria-label="Previous cards"></div>
+<div class="teams" id="teams"></div>
+
+<script src="/avatars.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const COLORS = {
+    red:    { hex:'#e0262c', name:'RED',    l:'R' },
+    yellow: { hex:'#f5cf1a', name:'YELLOW', l:'Y' },
+    green:  { hex:'#3f9d3a', name:'GREEN',  l:'G' },
+    blue:   { hex:'#1b6fc4', name:'BLUE',   l:'B' },
+  };
+  const COLOR_KEYS = Object.keys(COLORS);
+  const PLAIN_CHANCE = 0.10;               // plain number-only cards (no option)
+  const teamNo = (n) => (n === 0 ? 10 : n); // number 0 = team 10
+  let teamNames = [];
+  fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; buildChips(); }).catch(() => {});
+
+  // Unbiased random helpers
+  function rnd() { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 2 ** 32; }
+  const ri = (n) => Math.floor(rnd() * n);
+  const pick = (arr) => arr[ri(arr.length)];
+
+  // ---------- card artwork (Uno look) ----------
+  function badge(opt) {
+    if (opt.kind === 'color') {
+      const c = COLORS[opt.value];
+      return `<circle r="21" fill="${c.hex}" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/>` +
+        `<text y="8" text-anchor="middle" font-size="22" font-weight="900" fill="#fff" stroke="#111" stroke-width="1.4" paint-order="stroke">${c.l}</text>`;
+    }
+    return `<circle r="21" fill="#fff" stroke="#111" stroke-width="3"/>` +
+      `<text y="9" text-anchor="middle" font-size="26" font-weight="900" fill="#111">${opt.value}</text>`;
+  }
+  function cardSvg(c) {
+    const special = c.type === 'special', plain = c.type === 'plain';
+    const face = special ? '#14141a' : plain ? '#6b7280' : COLORS[c.color].hex;
+    const numFill = special ? '#ffd23f' : plain ? '#4b5563' : face;
+    const outline = '#111';
+    const oval = special ? 'url(#rb)' : '#fff';
+    const opt = special ? { kind:'star' } : plain ? null : c.option;
+    const badgeInner = !opt ? '' : opt.kind === 'star'
+      ? `<circle r="21" fill="#ffd23f" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/><text y="9" text-anchor="middle" font-size="26" fill="#111">★</text>`
+      : badge(opt);
+    const badgeG = (rot) => !opt ? '' :
+      `<g transform="${rot ? 'rotate(180 100 150) ' : ''}translate(160 42)">${badgeInner}` +
+      `<text y="38" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${special ? 'SPECIAL' : 'CHECK'}</text></g>`;
+    const font = `font-family="'Arial Black', Impact, system-ui, sans-serif" font-weight="900"`;
+    const corner = (rot) => `<text ${font} x="24" y="42" font-size="30" fill="#fff" stroke="#111" stroke-width="1.5" paint-order="stroke"${rot ? ' transform="rotate(180 100 150)"' : ''}>${c.number}</text>`;
+    return `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img">` +
+      `<defs><linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0262c"/><stop offset=".35" stop-color="#f5cf1a"/><stop offset=".7" stop-color="#3f9d3a"/><stop offset="1" stop-color="#1b6fc4"/></linearGradient></defs>` +
+      `<rect width="200" height="300" rx="18" fill="#fff" stroke="#d6d6d6"/>` +
+      `<rect x="10" y="10" width="180" height="280" rx="12" fill="${face}"/>` +
+      `<ellipse cx="100" cy="150" rx="62" ry="108" fill="${oval}" transform="rotate(24 100 150)"/>` +
+      `<text ${font} x="100" y="194" text-anchor="middle" font-size="130" fill="${numFill}" stroke="${outline}" stroke-width="9" paint-order="stroke">${c.number}</text>` +
+      corner(false) + corner(true) + badgeG(false) + badgeG(true) + `</svg>`;
+  }
+
+  // ---------- game state ----------
+  let round = 0, history = [];
+  function newCard() {
+    const r = rnd(), sp = Number($('sp').value) / 100;
+    if (r < sp) return { type:'special', number:ri(10) };
+    if (r < sp + PLAIN_CHANCE) return { type:'plain', number:ri(10) };
+    const kind = rnd() < 0.5 ? 'color' : 'number';
+    return { type:'normal', color:pick(COLOR_KEYS), number:ri(10),
+             option:{ kind, value: kind === 'color' ? pick(COLOR_KEYS) : ri(10) } };
+  }
+  function setInfo(c) {
+    const info = $('info'); info.replaceChildren();
+    const big = document.createElement('div'); big.className = 'big';
+    const sub = document.createElement('div'); sub.className = 'sub';
+    const hint = document.createElement('div'); hint.className = 'hint';
+    if (c.type === 'special') {
+      big.classList.add('special');
+      big.textContent = `★ SPECIAL: Team ${teamNo(c.number)}`;
+      const ava = document.createElement('div'); ava.className = 'ava'; ava.innerHTML = (window.TEAM_AVATARS || {})[c.number] || '';
+      sub.textContent = (teamNames[c.number] ? teamNames[c.number] + ' may' : 'This team may') + ' remove ALL cards of ONE colour of their choice!';
+      info.append(big, ava, sub);
+      return;
+    }
+    if (c.type === 'plain') {
+      big.textContent = 'Number card only';
+      sub.textContent = 'No option on this card. Nothing happens this round.';
+      info.append(big, sub);
+      return;
+    }
+    if (c.option.kind === 'color') {
+      const col = COLORS[c.option.value];
+      big.append('CHECK COLOUR');
+      const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, col.name);
+      sub.textContent = `Every team discards ALL their ${col.name} cards.`;
+    } else {
+      big.textContent = `CHECK NUMBER ${c.option.value}`;
+      sub.textContent = `Every team discards ALL their cards numbered ${c.option.value}.`;
+    }
+    hint.textContent = 'Only the corner badge counts. The card face is ignored.';
+    info.append(big, sub, hint);
+  }
+  function renderHist() {
+    $('hist').replaceChildren(...history.slice(1, 11).map((c) => {
+      const d = document.createElement('div'); d.innerHTML = cardSvg(c); return d;
+    }));
+  }
+  function buildChips(hit) {
+    $('teams').replaceChildren(...[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => {
+      const d = document.createElement('div'); d.className = 'chip' + (hit === n ? ' hit' : '');
+      d.innerHTML = (window.TEAM_AVATARS || {})[n] || '';
+      const b = document.createElement('b'); b.textContent = n;
+      const s = document.createElement('span'); s.textContent = `Team ${teamNo(n)}`;
+      d.append(b, s); d.title = teamNames[n] || ''; return d;
+    }));
+  }
+  function draw() {
+    const c = newCard();
+    history.unshift(c); round++;
+    $('round').textContent = `· Round ${round}`;
+    const card = $('card'); card.innerHTML = cardSvg(c);
+    card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip');
+    setInfo(c); renderHist(); buildChips(c.type === 'special' ? c.number : undefined);
+  }
+  $('draw').onclick = draw;
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON'].includes(document.activeElement.tagName)) { e.preventDefault(); draw(); }
+  });
+  $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
+  $('reset').onclick = () => {
+    if (round && !confirm('Reset round counter and history?')) return;
+    round = 0; history = []; $('round').textContent = ''; $('card').innerHTML = ''; renderHist(); buildChips();
+    $('info').innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to draw the first card.</div>';
+  };
+  buildChips();
+</script>
+</body>
+</html>
