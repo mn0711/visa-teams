@@ -132,6 +132,16 @@
   .tour-chip { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; background:#0a0d18cc; border:2px solid var(--gold); border-radius:999px; padding:3px 14px 3px 5px; font-weight:700; white-space:nowrap; font-size:.9rem; }
   .tca { width:32px; height:32px; } .tca svg { width:100%; height:100%; }
   .tour-trophy { position:absolute; left:50%; top:50%; width:150px; margin:-78px 0 0 -75px; font-size:110px; line-height:1; filter:drop-shadow(0 0 24px #ffd23f); }
+  .teamsel { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .tsel { width:58px; padding:4px 2px; border-radius:10px; display:grid; justify-items:center; font-size:.8rem; font-weight:800; }
+  .tsel svg { width:34px; height:34px; }
+  .tsel.on { outline:3px solid var(--gold); background:#3a3012; }
+  .tour-run { position:absolute; left:10px; width:56px; text-align:center; font-size:.7rem; color:var(--muted); }
+  .tour-run svg { width:46px; height:46px; display:block; margin:0 auto; }
+  .tour-run.win { color:var(--gold); filter:drop-shadow(0 0 10px #ffd23f); }
+  .tour-recv { position:absolute; right:14px; top:50%; margin-top:-66px; width:110px; text-align:center; font-weight:800; }
+  .tour-recv svg { width:90px; height:90px; display:block; margin:0 auto 2px; overflow:visible; }
+  .tour-flag { position:absolute; right:128px; top:30%; font-weight:900; color:var(--gold); opacity:0; transition:opacity .3s; text-shadow:0 2px 6px #000; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -181,11 +191,11 @@
 <details class="pool" id="pool">
   <summary>Pick pool: <span id="poolInfo">loading...</span></summary>
   <div class="bal">
-    <p class="hint2" style="margin:8px 0 0">By default the pool is <b>10 random participants</b> (one from each team, drawn once per game so it is fair) <b>plus the default people</b> below. Default people have no team: when one is picked, nobody discards that round. If you enter a custom list, it <b>replaces</b> everything.</p>
-    <div class="balrow"><label style="flex:1;min-width:260px">Default people (no team, comma separated)
+    <p class="hint2" style="margin:8px 0 0">The picked person is only the <b>receiver</b>: teams bring their cards to them, and the team does not matter. By default the pool is <b>10 random participants</b> (one from each team, drawn once per game so it is fair) <b>plus the default people</b> below. If you enter a custom list, it <b>replaces</b> everything.</p>
+    <div class="balrow"><label style="flex:1;min-width:260px">Default people (comma separated)
       <input id="defaults" type="text" placeholder="GDN, NUYY, PAMT, HUYC" style="flex:1;width:100%"></label></div>
-    <div class="hint2">Custom list: one person per line, either <b>Name</b> (no team) or <b>Name, team 1-10</b>.</div>
-    <textarea id="extra" placeholder="Anna Le, 3&#10;Binh Tran, 10&#10;Guest Helper"></textarea>
+    <div class="hint2">Custom list: one name per line.</div>
+    <textarea id="extra" placeholder="Anna Le&#10;Binh Tran&#10;Guest Helper"></textarea>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button id="addExtra">Add to custom list</button>
       <button id="clearExtra">Clear custom list</button>
@@ -193,7 +203,7 @@
       <button id="clearPicked">Allow everyone to be picked again</button>
     </div>
     <div class="err" id="poolMsg" style="color:var(--muted)"></div>
-    <div class="hint2">Who is in the pool now (used = already picked this cycle, dashed = no team):</div>
+    <div class="hint2">Who is in the pool now (struck through = already picked this cycle, dashed = default people):</div>
     <div id="poolList" class="plist"></div>
   </div>
 </details>
@@ -285,7 +295,6 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
   const nkey = (name) => name.normalize('NFC').toLowerCase().replace(/\s+/g, '');
   const nameOf = (t) => (teamNames[t] ? ` · ${teamNames[t]}` : '');
-  const teamLabel = (p) => (p.team == null ? 'no team' : `Team ${teamNo(p.team)}`);
 
   function newCard() {
     const r = rnd(), sp = S.special / 100, pl = S.plain / 100;
@@ -302,7 +311,7 @@
     const info = $('info'); info.replaceChildren();
     if (!c) {
       const cur = S.current;
-      if (cur && cur.person) info.innerHTML = '<div class="big">🧚 Card incoming…</div><div class="sub">Press <b>Conjure card</b> and the fairy creates the card for this person.</div>';
+      if (cur && cur.person) info.innerHTML = '<div class="big">🧚 Card incoming…</div><div class="sub">Press <b>Conjure card</b> and the fairy creates the card. Then teams run to the receiver.</div>';
       else if (cur) info.innerHTML = '<div class="big">Picking…</div>';
       else info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first person.</div>';
       return;
@@ -328,15 +337,15 @@
       const col = COLORS[c.option.color];
       big.append('CHECK');
       const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, `${col.name} ${c.option.number}`);
-      sub.textContent = `Only cards that are ${col.name} AND numbered ${c.option.number} can be discarded.`;
+      sub.textContent = `Only the ${col.name} ${c.option.number} counts. The first team to reach the receiver wins the round.`;
     } else if (c.option.kind === 'color') {
       const col = COLORS[c.option.value];
       big.append('CHECK COLOUR');
       const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, col.name);
-      sub.textContent = `Teams that hold ${col.name} cards can discard them all.`;
+      sub.textContent = `Teams holding ${col.name} cards run to the receiver. The first one there discards them all.`;
     } else {
       big.textContent = `CHECK NUMBER ${c.option.value}`;
-      sub.textContent = `Teams that hold cards numbered ${c.option.value} can discard them all.`;
+      sub.textContent = `Teams holding a ${c.option.value} run to the receiver. The first one there discards them all.`;
     }
     hint.textContent = 'Only the corner badge counts. The card face is ignored.';
     info.append(big, sub, hint);
@@ -350,7 +359,7 @@
     const c = S.current;
     if (!c || !c.pending) return null;
     if (c.card && c.card.type === 'special') return c.card.number;
-    return c.person ? c.person.team : null;
+    return c.team != null ? c.team : null;   // normal card: the team the host selected
   };
   function buildChips() {
     const cur = currentTeam();
@@ -368,7 +377,7 @@
   function renderLog() {
     $('log').replaceChildren(...S.log.slice(0, 8).map((e) => {
       const d = document.createElement('div');
-      d.textContent = `R${e.round} · Team ${teamNo(e.team)}${e.special ? ' (special)' : e.person ? ' · ' + e.person : ''} · −${e.removed} → ${e.left} left`;
+      d.textContent = `R${e.round} · Team ${teamNo(e.team)}${e.special ? ' (special)' : ''} · −${e.removed} → ${e.left} left${e.person ? ' · receiver ' + e.person : ''}`;
       return d;
     }));
   }
@@ -397,8 +406,8 @@
   function renderPoolList(all) {
     $('poolList').replaceChildren(...all.map((p) => {
       const s = document.createElement('span');
-      s.className = 'pp' + (S.picked.includes(nkey(p.name)) ? ' used' : '') + (p.team == null ? ' free' : '');
-      s.textContent = p.name + (p.team == null ? '' : ` · T${teamNo(p.team)}`);
+      s.className = 'pp' + (S.picked.includes(nkey(p.name)) ? ' used' : '') + ((S.defaultPeople || []).some((n) => nkey(n) === nkey(p.name)) ? ' free' : '');
+      s.textContent = p.name;
       return s;
     }));
   }
@@ -450,16 +459,14 @@
     if (!c) { box.classList.add('hidden'); return; }
     box.classList.remove('hidden');
     const add = (tag, cls, text, parent = box) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; parent.appendChild(e); return e; };
-    const showPerson = () => {
-      const team = c.person.team;
+    const showPerson = () => {   // the picked person only RECEIVES the cards, no team involved
       const row = add('div', 'person');
-      const ava = add('div', 'pava', null, row);
-      ava.innerHTML = team == null ? FAIRY_SVG : ((window.TEAM_AVATARS || {})[team] || '');
+      const ava = add('div', 'pava', null, row); ava.innerHTML = FAIRY_SVG;
       const txt = add('div', null, null, row);
       add('div', 'pname', c.person.name, txt);
-      add('div', 'sub', team == null ? 'No team (fairy helper)' : `Team ${teamNo(team)}${nameOf(team)}`, txt);
+      add('div', 'sub', '📥 Receiver: teams bring their cards to this person', txt);
     };
-    // Stage 1: pick a person. Stage 2: the fairy conjures the card for them.
+    // Stage 1: pick the receiver. Stage 2: the fairy conjures the card.
     if (!c.card) {
       if (spinText != null) { add('div', 'spin', spinText); return; }
       if (!c.person) { add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
@@ -474,20 +481,24 @@
       add('div', 'sub', 'Number card only: no option this round, nothing to record.');
       return;
     }
-    if (c.card.type === 'normal' && c.person && c.person.team == null) {
-      showPerson();
-      add('div', 'sub', `${c.person.name} is not in a team, so nobody discards this round. Pick the next person.`);
-      return;
-    }
-    if (!c.pending) { add('div', 'sub', '✓ Round recorded. Pick the next person.'); return; }
+    if (!c.pending) { add('div', 'sub', '✓ Round recorded. Pick the next receiver.'); return; }
+    if (c.person) showPerson();
     let team;
     if (c.card.type === 'special') {
       team = c.card.number;
       add('div', 'who', `★ Special: Team ${teamNo(team)}${nameOf(team)}`);
-      if (c.person) add('div', 'sub', `${c.person.name} (${teamLabel(c.person)}) is not affected this round.`);
     } else {
-      showPerson();
-      team = c.person.team;
+      add('div', 'sub', 'Which team reached the receiver first?');
+      const sel = add('div', 'teamsel');
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n) => {
+        const b = add('button', 'tsel' + (c.team === n ? ' on' : ''), null, sel);
+        b.innerHTML = `${(window.TEAM_AVATARS || {})[n] || ''}<span>${teamNo(n)}</span>`;
+        b.title = `Team ${teamNo(n)}${nameOf(n)}`;
+        b.onclick = () => { c.team = n; save(); renderAction(); buildChips(); };
+      });
+      if (c.team == null) { add('div', 'sub', 'Choose the team above, then enter how many cards it handed over.'); return; }
+      team = c.team;
+      add('div', 'who', `Team ${teamNo(team)}${nameOf(team)} wins the round`);
     }
     const left = S.counts[team];
     const r = add('div', 'row');
@@ -503,17 +514,15 @@
     const c = S.current;
     if (!c || !c.card || !c.pending) return;
     const special = c.card.type === 'special';
-    const team = special ? c.card.number : c.person ? c.person.team : null;
+    const team = special ? c.card.number : c.team;
     if (team == null) return;
     const raw = $('removed').value;
     const n = Number(raw === '' ? 0 : raw);
     if (!Number.isInteger(n) || n < 0 || n > S.counts[team]) { $('err').textContent = `Enter a whole number from 0 to ${S.counts[team]}.`; return; }
     S.counts[team] -= n;
-    // the picked person is only "used up" when their own team acted
-    const actor = special ? null : c.person;
-    if (actor) S.picked.push(nkey(actor.name));
+    if (c.person) S.picked.push(nkey(c.person.name));   // the receiver is used up for this cycle
     S.log.unshift({ round: S.round, team, removed: n, left: S.counts[team], special,
-                    person: actor ? actor.name : null, personObj: actor, card: c.card });
+                    person: c.person ? c.person.name : null, personObj: c.person, card: c.card });
     c.pending = false;
     if (S.counts[team] === 0) S.won = team;
     save(); renderAll(); loadPool();
@@ -524,7 +533,7 @@
     S.counts[e.team] += e.removed;
     if (e.personObj) S.picked = S.picked.filter((k) => k !== nkey(e.personObj.name));
     S.won = null;
-    S.current = { card: e.card, person: e.personObj || null, pending: true };
+    S.current = { card: e.card, person: e.personObj || null, team: e.special ? null : e.team, pending: true };
     save(); renderAll(); loadPool();
   }
   async function startRound() {
@@ -544,9 +553,7 @@
     const c = S.current;
     if (!c || c.card || !c.person || picking || S.won != null) return;
     const card = newCard();
-    const teamless = card.type === 'normal' && c.person.team == null;   // helper without a team: nobody discards
-    c.card = card; c.pending = card.type !== 'plain' && !teamless;
-    if (teamless) S.picked.push(nkey(c.person.name));
+    c.card = card; c.pending = card.type !== 'plain'; c.team = null;
     save(); renderAll(true);
   }
   function primaryAction() {
@@ -597,10 +604,9 @@
   $('addExtra').onclick = () => {
     let added = 0;
     $('extra').value.split('\n').map((l) => l.trim()).filter(Boolean).forEach((l) => {
-      const i = l.lastIndexOf(','), t = i > 0 ? Number(l.slice(i + 1)) : NaN;
-      if (i > 0 && Number.isInteger(t) && t >= 1 && t <= 10) S.extras.push({ name: l.slice(0, i).trim().replace(/\s+/g, ' '), team: t % 10 });
-      else S.extras.push({ name: l.replace(/\s+/g, ' '), team: null });
-      added++;
+      const i = l.lastIndexOf(','), t = i > 0 ? Number(l.slice(i + 1)) : NaN;   // an old-style ", team" suffix is ignored
+      const name = (i > 0 && Number.isInteger(t) && t >= 1 && t <= 10 ? l.slice(0, i) : l).trim().replace(/\s+/g, ' ');
+      if (name) { S.extras.push({ name, team: null }); added++; }
     });
     save(); $('extra').value = ''; loadPool();
     $('poolMsg').textContent = `Added ${added}. The pool is now your custom list.`;
@@ -921,8 +927,7 @@
       const iv = setInterval(() => { nm.textContent = pick(names); }, 80); tourClean.push(() => clearInterval(iv));
       tourLater(() => {
         clearInterval(iv); nm.textContent = pick(['Anna', 'Binh', 'Chi', 'Dung']); nm.classList.add('land');
-        const n = 1 + ri(9);
-        res.append(mk('div', 'tour-slotava', (window.TEAM_AVATARS || {})[n] || ''), mk('div', null, `Team ${teamNo(n)}${teamNames[n] ? ' · ' + teamNames[n] : ''}`));
+        res.append(mk('div', 'tour-slotava', FAIRY_SVG), mk('div', null, '📥 Receiver: teams bring their cards here'));
       }, 1500);
       tourLater(cycle, 4400);
     };
@@ -999,12 +1004,30 @@
         { duration: 1800 + rnd() * 1200, easing: 'ease-in' }).onfinish = () => s.remove();
     }, 100);
   }
+  function sceneRace(st) {
+    const [W] = stageSize(st);
+    st.append(mk('div', 'tour-recv', FAIRY_SVG + '<span>Receiver</span>'));
+    const runners = [[2, 3800, 0.14], [5, 2700, 0.40], [8, 3300, 0.66]];   // team, ms to arrive, vertical position
+    const els = runners.map(([n, , y]) => {
+      const d = mk('div', 'tour-run', (window.TEAM_AVATARS || {})[n] || ''); d.style.top = (y * 100) + '%';
+      d.append(mk('span', null, `Team ${n}`)); st.append(d); return d;
+    });
+    const flag = mk('div', 'tour-flag', '🏁 First!'); st.append(flag);
+    const run = () => {
+      flag.style.opacity = 0;
+      els.forEach((d, i) => tourAnim(d, [{ transform: 'translateX(0)' }, { transform: `translateX(${Math.max(80, W - 200)}px)` }], { duration: runners[i][1], easing: 'ease-in-out', fill: 'forwards' }));
+      tourLater(() => { flag.style.top = (runners[1][2] * 100 - 4) + '%'; flag.style.opacity = 1; els[1].classList.add('win'); }, runners[1][1]);
+      tourLater(() => { els.forEach((d) => { d.classList.remove('win'); d.getAnimations().forEach((a) => a.cancel()); }); run(); }, 5800);
+    };
+    run();
+  }
   const TOUR = [
     { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: '10 teams, 40 number cards each. Be the first team to get rid of every card!' },
-    { title: '1 · Pick a person', scene: scenePick, text: 'A person is picked at random and their team is in play. Helpers without a team can be picked too: then nobody discards that round.' },
-    { title: '2 · The fairy conjures a card', scene: sceneConjure, text: 'The fairy creates a card for that person. Watch the little badge in the corner of the card!' },
+    { title: '1 · Pick the receiver', scene: scenePick, text: 'A person is picked at random. They are only the receiver: teams will bring their cards to this person.' },
+    { title: '2 · The fairy conjures a card', scene: sceneConjure, text: 'The fairy creates a card. Watch the little badge in the corner of the card!' },
     { title: '3 · Read the corner badge', scene: sceneBadge, text: 'Colour: every card of that colour. Number: every card with that number. Colour + number: only that exact card. The big colour and number on the face do not count!' },
-    { title: '4 · Discard and count', scene: sceneDiscard, text: 'The picked team discards every matching card and tells the host how many. The host types the number and the team’s count goes down.' },
+    { title: '4 · Race to the receiver', scene: sceneRace, text: 'Every team holding matching cards runs to the receiver. The first team to arrive wins the round!' },
+    { title: '5 · Discard and count', scene: sceneDiscard, text: 'The winning team discards its matching cards and tells the host how many. The host picks the team, types the number, and the count goes down.' },
     { title: '★ Special card', scene: sceneSpecial, text: 'A rainbow card with a star! The team whose number is on the card may remove ALL cards of one colour of their choice.' },
     { title: 'Win the game', scene: sceneWin, text: 'The first team with no cards left wins. Keep an eye on the scoreboard!' },
   ];
