@@ -59,15 +59,17 @@
   #win .box { background:var(--panel); border:3px solid var(--gold); border-radius:20px; padding:28px; text-align:center; max-width:520px; }
   #win .box h2 { font-size:clamp(1.6rem,4vw,2.6rem); margin:0 0 6px; color:var(--gold); }
   #win .ava { width:170px; height:170px; }
+  .bal { display:grid; gap:10px; margin-top:8px; }
+  .balrow { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .balrow input[type=number] { width:80px; padding:6px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; text-align:center; }
+  .hint2 { color:var(--muted); font-size:.85rem; }
+  #estimate.ok { color:#6fdc7a; } #estimate.warn { color:#f5a31a; }
   .hidden { display:none !important; }
 </style>
 </head>
 <body>
 <div class="top">
   <h1>🎴 Uno Teams <span class="round" id="round"></span></h1>
-  <label>Special chance
-    <select id="sp"><option value="5">5%</option><option value="8" selected>8%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option></select>
-  </label>
   <button id="fs">⛶ Full screen</button>
   <label>Cards per team <input id="start" type="number" min="1" max="200" value="40"></label>
   <button id="undo">&#8630; Undo last</button>
@@ -88,6 +90,25 @@
 <div class="hist" id="hist" aria-label="Previous cards"></div>
 <div class="teams" id="teams"></div>
 <div class="log" id="log"></div>
+<details class="pool" id="balance">
+  <summary>Game balance: <span id="estimate">estimating...</span></summary>
+  <div class="bal">
+    <div class="balrow"><b>Option mix (weights)</b>
+      <label>Colour <input id="wColor" type="number" min="0" max="100"></label>
+      <label>Number <input id="wNumber" type="number" min="0" max="100"></label>
+      <label>Colour + number <input id="wBoth" type="number" min="0" max="100"></label>
+    </div>
+    <div class="balrow">
+      <label>Special card chance <select id="sp"><option value="5">5%</option><option value="8">8%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="25">25%</option></select></label>
+      <label>Plain card chance <select id="pl"><option value="0">0%</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option></select></label>
+      <label>Seconds per round <input id="secs" type="number" min="10" max="300"></label>
+    </div>
+    <div class="balrow"><b>Presets</b>
+      <button data-p="fast">Faster</button><button data-p="balanced">Balanced</button><button data-p="long">Longer</button>
+    </div>
+    <div class="hint2">Colour options remove the most cards, so the game ends sooner. Number options remove fewer, and "colour + number" (for example GREEN 5) removes about one card, which makes the game longer. The estimate simulates 400 games with random 40-card hands. Changes apply from the next card.</div>
+  </div>
+</details>
 <details class="pool" id="pool">
   <summary>Pick pool: <span id="poolInfo">loading...</span></summary>
   <p style="color:var(--muted);margin:8px 0 0">Registered participants are always in the pool. To add more people, enter one per line as <b>Name, team</b> (team 1-10).</p>
@@ -128,6 +149,11 @@
       return `<circle r="21" fill="${c.hex}" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/>` +
         `<text y="8" text-anchor="middle" font-size="22" font-weight="900" fill="#fff" stroke="#111" stroke-width="1.4" paint-order="stroke">${c.l}</text>`;
     }
+    if (opt.kind === 'both') {
+      const c = COLORS[opt.color];
+      return `<circle r="21" fill="${c.hex}" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/>` +
+        `<text y="10" text-anchor="middle" font-size="28" font-weight="900" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${opt.number}</text>`;
+    }
     return `<circle r="21" fill="#fff" stroke="#111" stroke-width="3"/>` +
       `<text y="9" text-anchor="middle" font-size="26" font-weight="900" fill="#111">${opt.value}</text>`;
   }
@@ -157,7 +183,8 @@
 
   // ---------- game state (saved in this browser) ----------
   const KEY = 'unoGame.v1';
-  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], extras: [], log: [], round: 0, history: [], current: null, won: null });
+  const SETTINGS = { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5, secs: 30 };
+  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], extras: [], log: [], round: 0, history: [], current: null, won: null, ...JSON.parse(JSON.stringify(SETTINGS)) });
   let S = fresh();
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -168,12 +195,15 @@
   const nameOf = (t) => (teamNames[t] ? ` · ${teamNames[t]}` : '');
 
   function newCard() {
-    const r = rnd(), sp = Number($('sp').value) / 100;
+    const r = rnd(), sp = S.special / 100, pl = S.plain / 100;
     if (r < sp) return { type:'special', number:ri(10) };
-    if (r < sp + PLAIN_CHANCE) return { type:'plain', number:ri(10) };
-    const kind = rnd() < 0.5 ? 'color' : 'number';
-    return { type:'normal', color:pick(COLOR_KEYS), number:ri(10),
-             option:{ kind, value: kind === 'color' ? pick(COLOR_KEYS) : ri(10) } };
+    if (r < sp + pl) return { type:'plain', number:ri(10) };
+    const m = S.mix, k = rnd() * ((m.color + m.number + m.both) || 1);
+    let option;
+    if (k < m.color) option = { kind:'color', value:pick(COLOR_KEYS) };
+    else if (k < m.color + m.number) option = { kind:'number', value:ri(10) };
+    else option = { kind:'both', color:pick(COLOR_KEYS), number:ri(10) };
+    return { type:'normal', color:pick(COLOR_KEYS), number:ri(10), option };
   }
   function setInfo(c) {
     const info = $('info'); info.replaceChildren();
@@ -195,7 +225,12 @@
       info.append(big, sub);
       return;
     }
-    if (c.option.kind === 'color') {
+    if (c.option.kind === 'both') {
+      const col = COLORS[c.option.color];
+      big.append('CHECK');
+      const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, `${col.name} ${c.option.number}`);
+      sub.textContent = `Only cards that are ${col.name} AND numbered ${c.option.number} can be discarded.`;
+    } else if (c.option.kind === 'color') {
       const col = COLORS[c.option.value];
       big.append('CHECK COLOUR');
       const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, col.name);
@@ -357,12 +392,13 @@
   function newGame() {
     if ((S.log.length || S.round) && !confirm('Start a new game? Card counts and rounds will be reset.')) return;
     const start = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
-    S = { ...fresh(start), extras: S.extras };
+    S = { ...fresh(start), extras: S.extras, mix: S.mix, special: S.special, plain: S.plain, secs: S.secs };
     save(); renderAll(); loadPool();
   }
   function renderAll(animate) {
     $('round').textContent = S.round ? `· Round ${S.round}` : '';
     $('start').value = S.start;
+    syncSettings();
     const card = $('card');
     card.innerHTML = S.current ? cardSvg(S.current.card) : '';
     if (animate && S.current) { card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip'); }
@@ -397,7 +433,83 @@
   };
   $('clearExtra').onclick = () => { S.extras = []; save(); loadPool(); $('poolMsg').textContent = 'Added names removed.'; };
   $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
-  renderAll(); loadPool();
+
+  // ---------- game balance + duration estimate ----------
+  const PRESETS = {
+    fast:     { mix: { color: 8, number: 1, both: 1 }, special: 20, plain: 0 },
+    balanced: { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5 },
+    long:     { mix: { color: 3, number: 3, both: 4 }, special: 10, plain: 10 },
+  };
+  function syncSettings() {
+    $('wColor').value = S.mix.color; $('wNumber').value = S.mix.number; $('wBoth').value = S.mix.both;
+    $('sp').value = String(S.special); $('pl').value = String(S.plain); $('secs').value = S.secs;
+  }
+  function readSettings() {
+    const w = (id) => Math.max(0, Math.min(100, Math.floor(Number($(id).value) || 0)));
+    S.mix = { color: w('wColor'), number: w('wNumber'), both: w('wBoth') };
+    if (S.mix.color + S.mix.number + S.mix.both === 0) S.mix.color = 1;
+    S.special = Number($('sp').value); S.plain = Number($('pl').value);
+    S.secs = Math.max(10, Math.min(300, Math.floor(Number($('secs').value) || 30)));
+    save(); scheduleEstimate();
+  }
+  // Monte Carlo: each team holds `cards` random cards (4 colours x numbers 0-9); one team is hit per round.
+  function simGame(o) {
+    const R = (n) => Math.floor(Math.random() * n);
+    const hands = Array.from({ length: 10 }, () => Array.from({ length: 4 }, () => new Array(10).fill(0)));
+    const tot = new Array(10).fill(o.cards);
+    for (let t = 0; t < 10; t++) for (let i = 0; i < o.cards; i++) hands[t][R(4)][R(10)]++;
+    const remove = (t, fn) => {
+      let r = 0;
+      for (let c = 0; c < 4; c++) for (let n = 0; n < 10; n++) if (fn(c, n)) { r += hands[t][c][n]; hands[t][c][n] = 0; }
+      tot[t] -= r;
+    };
+    const m = o.mix, wsum = (m.color + m.number + m.both) || 1;
+    for (let round = 1; round < 1500; round++) {
+      const r = Math.random();
+      if (r < o.special / 100) {
+        const t = R(10);
+        let best = -1, bc = 0;
+        for (let c = 0; c < 4; c++) { const v = hands[t][c].reduce((x, y) => x + y, 0); if (v > best) { best = v; bc = c; } }
+        remove(t, (c) => c === bc);
+        if (tot[t] === 0) return round;
+        continue;
+      }
+      if (r < (o.special + o.plain) / 100) continue;
+      const t = R(10), k = Math.random() * wsum;
+      if (k < m.color) { const cc = R(4); remove(t, (c) => c === cc); }
+      else if (k < m.color + m.number) { const nn = R(10); remove(t, (c, n) => n === nn); }
+      else { const cc = R(4), nn = R(10); remove(t, (c, n) => c === cc && n === nn); }
+      if (tot[t] === 0) return round;
+    }
+    return 1500;
+  }
+  function estimate(o, games = 400) {
+    const rs = Array.from({ length: games }, () => simGame(o)).sort((a, b) => a - b);
+    const q = (p) => rs[Math.floor(p * (games - 1))];
+    const mins = (rounds) => Math.max(1, Math.round(rounds * S.secs / 60));
+    return { p10: q(0.1), med: q(0.5), p90: q(0.9), lo: mins(q(0.1)), mid: mins(q(0.5)), hi: mins(q(0.9)) };
+  }
+  let estTimer;
+  function scheduleEstimate() {
+    $('estimate').className = ''; $('estimate').textContent = 'estimating...';
+    clearTimeout(estTimer); estTimer = setTimeout(updateEstimates, 250);
+  }
+  function updateEstimates() {
+    const e = estimate({ cards: S.start, mix: S.mix, special: S.special, plain: S.plain });
+    const el = $('estimate');
+    el.textContent = `~${e.med} rounds (typical ${e.p10}-${e.p90}) ≈ ${e.mid} min (${e.lo}-${e.hi}) at ${S.secs}s/round · target 10-20 min`;
+    el.className = e.mid >= 10 && e.mid <= 20 ? 'ok' : 'warn';
+    document.querySelectorAll('#balance button[data-p]').forEach((b) => {
+      const p = PRESETS[b.dataset.p], pe = estimate({ cards: S.start, ...p }, 200);
+      b.textContent = `${{ fast: 'Faster', balanced: 'Balanced', long: 'Longer' }[b.dataset.p]} · ~${pe.mid} min`;
+    });
+  }
+  ['wColor', 'wNumber', 'wBoth', 'sp', 'pl', 'secs'].forEach((id) => { $(id).addEventListener('input', readSettings); $(id).addEventListener('change', readSettings); });
+  document.querySelectorAll('#balance button[data-p]').forEach((b) => {
+    b.onclick = () => { const p = PRESETS[b.dataset.p]; S.mix = { ...p.mix }; S.special = p.special; S.plain = p.plain; save(); syncSettings(); scheduleEstimate(); };
+  });
+  $('start').addEventListener('change', scheduleEstimate);
+  renderAll(); loadPool(); scheduleEstimate();
 </script>
 </body>
 </html>
