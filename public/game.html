@@ -447,7 +447,7 @@
   function readSettings() {
     const w = (id) => Math.max(0, Math.min(100, Math.floor(Number($(id).value) || 0)));
     S.mix = { color: w('wColor'), number: w('wNumber'), both: w('wBoth') };
-    if (S.mix.color + S.mix.number + S.mix.both === 0) S.mix.color = 1;
+    if (S.mix.color + S.mix.number + S.mix.both === 0) { S.mix.color = 1; $('wColor').value = 1; }
     S.special = Number($('sp').value); S.plain = Number($('pl').value);
     S.secs = Math.max(10, Math.min(300, Math.floor(Number($('secs').value) || 30)));
     save(); scheduleEstimate();
