@@ -82,12 +82,63 @@
   .balrow input[type=number] { width:80px; padding:6px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; text-align:center; }
   .hint2 { color:var(--muted); font-size:.85rem; }
   #estimate.ok { color:#6fdc7a; } #estimate.warn { color:#f5a31a; }
+  .pool input[type=text] { font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; margin-top:4px; display:block; }
+  .plist { display:flex; flex-wrap:wrap; gap:6px; }
+  .pp { padding:3px 10px; border-radius:999px; background:#0d1019; border:1px solid var(--line); font-size:.85rem; }
+  .pp.used { opacity:.4; text-decoration:line-through; } .pp.free { border-style:dashed; color:var(--gold); }
+  #tour { position:fixed; inset:0; z-index:60; background:#05070dd9; backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:14px; }
+  .tour-box { position:relative; width:min(760px,100%); max-height:100%; overflow:auto; background:var(--panel); border:2px solid var(--gold); border-radius:20px; padding:20px 22px 16px; text-align:center; box-shadow:0 20px 60px #000a; }
+  .tour-x { position:absolute; top:10px; right:10px; padding:4px 10px; z-index:2; }
+  .tour-stage { position:relative; height:280px; border-radius:14px; background:radial-gradient(circle at 50% 40%, #26305a, #0d1120); overflow:hidden; perspective:900px; margin-bottom:12px; }
+  #tourTitle { margin:4px 0; font-size:clamp(1.4rem,3.4vw,2rem); color:var(--gold); }
+  #tourText { margin:0 auto 12px; max-width:620px; color:var(--text); font-size:clamp(1rem,2vw,1.2rem); }
+  .tour-dots { display:flex; gap:8px; justify-content:center; margin-bottom:12px; }
+  .tour-dots i { width:10px; height:10px; border-radius:50%; background:#ffffff33; cursor:pointer; }
+  .tour-dots i.on { background:var(--gold); transform:scale(1.35); }
+  .tour-nav { display:flex; gap:8px; justify-content:center; }
+  .tour-bar { height:4px; background:#ffffff1a; border-radius:2px; margin-top:12px; overflow:hidden; }
+  .tour-bar i { display:block; height:100%; width:0; background:var(--gold); }
+  .tour-fairy { width:86px; }
+  .tour-fairy .wing, .fairy .wing { animation:flap .16s ease-in-out infinite alternate; }
+  .tour-teams { position:absolute; left:0; right:0; bottom:22px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
+  .tt { width:54px; text-align:center; font-size:.7rem; color:var(--muted); animation:ttpop .5s both; }
+  .tt svg { width:48px; height:48px; display:block; margin:0 auto; }
+  @keyframes ttpop { from { transform:scale(0); opacity:0; } to { transform:none; opacity:1; } }
+  .tour-slot { position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); min-width:min(300px,86%); padding:16px 26px; border-radius:16px; background:#0a0d18; border:3px solid var(--gold); box-shadow:0 0 24px #ffd23f66; }
+  .tour-slotname { font-size:clamp(1.5rem,5vw,2.2rem); font-weight:900; color:#fff; min-height:1.3em; }
+  .tour-slotname.land { color:var(--gold); animation:landpop .4s; }
+  @keyframes landpop { from { transform:scale(1.35); } to { transform:none; } }
+  .tour-slotres { position:absolute; left:0; right:0; bottom:14px; display:flex; align-items:center; justify-content:center; gap:12px; font-weight:800; font-size:1.3rem; animation:ttpop .4s both; }
+  .tour-slotava { width:64px; height:64px; } .tour-slotava svg { width:100%; height:100%; }
+  .tour-card { position:absolute; left:50%; top:50%; width:130px; aspect-ratio:2/3; margin:-97px 0 0 -65px; }
+  .tour-card svg { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 18px #000a); }
+  .tour-badges { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 8px 18px; }
+  .tb { opacity:.5; transform:scale(.9); transition:.35s; text-align:center; width:31%; max-width:150px; }
+  .tb.on { opacity:1; transform:scale(1.06); }
+  .tb-card { position:relative; width:min(104px, 88%); aspect-ratio:2/3; margin:0 auto 6px; }
+  .tb-card svg { width:100%; height:100%; display:block; filter:drop-shadow(0 8px 14px #000a); }
+  .tb-ring { position:absolute; left:67%; top:5%; width:26%; aspect-ratio:1; border-radius:50%; border:3px solid #ffd23f; box-shadow:0 0 14px #ffd23f; opacity:0; }
+  .tb.on .tb-ring { opacity:1; animation:ringpulse 1s ease-in-out infinite; }
+  @keyframes ringpulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.35); } }
+  .tb-cap { font-size:clamp(.68rem,2.2vw,.85rem); font-weight:700; line-height:1.2; }
+  .tour-dhead { position:absolute; top:14px; left:0; right:0; font-weight:900; font-size:1.3rem; color:#fff; }
+  .dotg { width:.9em; height:.9em; display:inline-block; border-radius:50%; background:#3f9d3a; border:3px solid #fff; vertical-align:-.1em; }
+  .tour-hand { position:absolute; left:0; right:0; top:70px; display:flex; gap:7px; justify-content:center; flex-wrap:wrap; padding:0 8px; }
+  .hc { width:42px; height:62px; border-radius:8px; border:3px solid #fff; display:grid; place-items:center; font:900 22px system-ui; color:#fff; text-shadow:0 2px 0 #0006; transition:transform .5s, opacity .5s; }
+  .hc.gone { transform:translateY(-70px) rotate(20deg) scale(.6); opacity:0; }
+  .tour-count { position:absolute; left:0; right:0; bottom:14px; font-size:1.4rem; font-weight:900; color:var(--gold); }
+  .tour-rays { position:absolute; left:50%; top:50%; width:520px; aspect-ratio:1; border-radius:50%; background:repeating-conic-gradient(from 0deg, #ffd23f66 0 7deg, transparent 7deg 22deg);
+               -webkit-mask-image:radial-gradient(circle, #000 8%, transparent 62%); mask-image:radial-gradient(circle, #000 8%, transparent 62%); }
+  .tour-chip { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; background:#0a0d18cc; border:2px solid var(--gold); border-radius:999px; padding:3px 14px 3px 5px; font-weight:700; white-space:nowrap; font-size:.9rem; }
+  .tca { width:32px; height:32px; } .tca svg { width:100%; height:100%; }
+  .tour-trophy { position:absolute; left:50%; top:50%; width:150px; margin:-78px 0 0 -75px; font-size:110px; line-height:1; filter:drop-shadow(0 0 24px #ffd23f); }
   .hidden { display:none !important; }
 </style>
 </head>
 <body>
 <div class="top">
   <h1><span class="logo" id="logo"></span> Uno Fairy <span class="round" id="round"></span></h1>
+  <button id="helpBtn">❓ How to play</button>
   <button id="fs">⛶ Full screen</button>
   <label>Cards per team <input id="start" type="number" min="1" max="200" value="40"></label>
   <button id="undo">&#8630; Undo last</button>
@@ -129,16 +180,39 @@
 </details>
 <details class="pool" id="pool">
   <summary>Pick pool: <span id="poolInfo">loading...</span></summary>
-  <p style="color:var(--muted);margin:8px 0 0">Registered participants are always in the pool. To add more people, enter one per line as <b>Name, team</b> (team 1-10).</p>
-  <textarea id="extra" placeholder="Anna Le, 3&#10;Binh Tran, 10"></textarea>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <button id="addExtra">Add names</button>
-    <button id="clearExtra">Remove added names</button>
-    <button id="clearPicked">Allow everyone to be picked again</button>
+  <div class="bal">
+    <p class="hint2" style="margin:8px 0 0">By default the pool is <b>10 random participants</b> (one from each team, drawn once per game so it is fair) <b>plus the default people</b> below. Default people have no team: when one is picked, nobody discards that round. If you enter a custom list, it <b>replaces</b> everything.</p>
+    <div class="balrow"><label style="flex:1;min-width:260px">Default people (no team, comma separated)
+      <input id="defaults" type="text" placeholder="GDN, NUYY, PAMT, HUYC" style="flex:1;width:100%"></label></div>
+    <div class="hint2">Custom list: one person per line, either <b>Name</b> (no team) or <b>Name, team 1-10</b>.</div>
+    <textarea id="extra" placeholder="Anna Le, 3&#10;Binh Tran, 10&#10;Guest Helper"></textarea>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button id="addExtra">Add to custom list</button>
+      <button id="clearExtra">Clear custom list</button>
+      <button id="redraw">Re-draw the 10 random participants</button>
+      <button id="clearPicked">Allow everyone to be picked again</button>
+    </div>
+    <div class="err" id="poolMsg" style="color:var(--muted)"></div>
+    <div class="hint2">Who is in the pool now (used = already picked this cycle, dashed = no team):</div>
+    <div id="poolList" class="plist"></div>
   </div>
-  <div class="err" id="poolMsg" style="color:var(--muted)"></div>
 </details>
 <div id="win" class="hidden"></div>
+<div id="tour" class="hidden" role="dialog" aria-label="How to play Uno Fairy">
+  <div class="tour-box">
+    <button class="tour-x" id="tourX" aria-label="Close">✕</button>
+    <div class="tour-stage" id="tourStage"></div>
+    <h2 id="tourTitle"></h2>
+    <p id="tourText"></p>
+    <div class="tour-dots" id="tourDots"></div>
+    <div class="tour-nav">
+      <button id="tourBack">← Back</button>
+      <button id="tourSkip">Skip</button>
+      <button id="tourNext" class="primary">Next →</button>
+    </div>
+    <div class="tour-bar"><i id="tourBar"></i></div>
+  </div>
+</div>
 
 <script src="/avatars.js"></script>
 <script>
@@ -201,8 +275,8 @@
 
   // ---------- game state (saved in this browser) ----------
   const KEY = 'unoGame.v1';
-  const SETTINGS = { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5, secs: 30 };
-  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], extras: [], log: [], round: 0, history: [], current: null, won: null, ...JSON.parse(JSON.stringify(SETTINGS)) });
+  const SETTINGS = { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5, secs: 30, defaultPeople: ['GDN', 'NUYY', 'PAMT', 'HUYC'] };
+  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], extras: [], log: [], round: 0, history: [], current: null, won: null, sample: null, ...JSON.parse(JSON.stringify(SETTINGS)) });
   let S = fresh();
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -211,6 +285,7 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
   const nkey = (name) => name.normalize('NFC').toLowerCase().replace(/\s+/g, '');
   const nameOf = (t) => (teamNames[t] ? ` · ${teamNames[t]}` : '');
+  const teamLabel = (p) => (p.team == null ? 'no team' : `Team ${teamNo(p.team)}`);
 
   function newCard() {
     const r = rnd(), sp = S.special / 100, pl = S.plain / 100;
@@ -313,15 +388,39 @@
 
   // ---------- pick pool ----------
   let registered = [], spinText = null, picking = false;
+  const defaultPeople = () => (S.defaultPeople || []).map((n) => ({ name: n, team: null }));
+  function makeSample() {   // one random registered participant from each team that has people
+    const byTeam = {};
+    registered.forEach((p) => { (byTeam[p.team] = byTeam[p.team] || []).push(p); });
+    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].filter((t) => byTeam[t] && byTeam[t].length).map((t) => pick(byTeam[t]));
+  }
+  function renderPoolList(all) {
+    $('poolList').replaceChildren(...all.map((p) => {
+      const s = document.createElement('span');
+      s.className = 'pp' + (S.picked.includes(nkey(p.name)) ? ' used' : '') + (p.team == null ? ' free' : '');
+      s.textContent = p.name + (p.team == null ? '' : ` · T${teamNo(p.team)}`);
+      return s;
+    }));
+  }
   async function loadPool() {
     try {
       const r = await fetch('/api/admin/entries', { cache: 'no-store' });
       if (r.ok) registered = (await r.json()).map((e) => ({ name: e.name, team: e.team }));
     } catch {}
+    const custom = S.extras.length > 0;
+    let base;
+    if (custom) base = S.extras;
+    else {
+      if (!S.sample && registered.length) { S.sample = makeSample(); save(); }
+      base = [...(S.sample || []), ...defaultPeople()];
+    }
     const seen = new Set(), all = [];
-    [...registered, ...S.extras].forEach((p) => { const k = nkey(p.name); if (!seen.has(k)) { seen.add(k); all.push(p); } });
+    base.forEach((p) => { const k = nkey(p.name); if (!seen.has(k)) { seen.add(k); all.push(p); } });
     const avail = all.filter((p) => !S.picked.includes(nkey(p.name)));
-    $('poolInfo').textContent = `${registered.length} registered + ${S.extras.length} added · ${avail.length} not picked yet`;
+    $('poolInfo').textContent = custom
+      ? `custom list · ${all.length} people · ${avail.length} not picked yet`
+      : `auto · ${(S.sample || []).length} random participants (1 per team) + ${defaultPeople().length} default people · ${avail.length} not picked yet`;
+    renderPoolList(all);
     return { all, avail };
   }
   async function pickPerson() {
@@ -354,10 +453,11 @@
     const showPerson = () => {
       const team = c.person.team;
       const row = add('div', 'person');
-      const ava = add('div', 'pava', null, row); ava.innerHTML = (window.TEAM_AVATARS || {})[team] || '';
+      const ava = add('div', 'pava', null, row);
+      ava.innerHTML = team == null ? FAIRY_SVG : ((window.TEAM_AVATARS || {})[team] || '');
       const txt = add('div', null, null, row);
       add('div', 'pname', c.person.name, txt);
-      add('div', 'sub', `Team ${teamNo(team)}${nameOf(team)}`, txt);
+      add('div', 'sub', team == null ? 'No team (fairy helper)' : `Team ${teamNo(team)}${nameOf(team)}`, txt);
     };
     // Stage 1: pick a person. Stage 2: the fairy conjures the card for them.
     if (!c.card) {
@@ -374,12 +474,17 @@
       add('div', 'sub', 'Number card only: no option this round, nothing to record.');
       return;
     }
+    if (c.card.type === 'normal' && c.person && c.person.team == null) {
+      showPerson();
+      add('div', 'sub', `${c.person.name} is not in a team, so nobody discards this round. Pick the next person.`);
+      return;
+    }
     if (!c.pending) { add('div', 'sub', '✓ Round recorded. Pick the next person.'); return; }
     let team;
     if (c.card.type === 'special') {
       team = c.card.number;
       add('div', 'who', `★ Special: Team ${teamNo(team)}${nameOf(team)}`);
-      if (c.person) add('div', 'sub', `${c.person.name} (Team ${teamNo(c.person.team)}) is not affected this round.`);
+      if (c.person) add('div', 'sub', `${c.person.name} (${teamLabel(c.person)}) is not affected this round.`);
     } else {
       showPerson();
       team = c.person.team;
@@ -439,7 +544,9 @@
     const c = S.current;
     if (!c || c.card || !c.person || picking || S.won != null) return;
     const card = newCard();
-    c.card = card; c.pending = card.type !== 'plain';
+    const teamless = card.type === 'normal' && c.person.team == null;   // helper without a team: nobody discards
+    c.card = card; c.pending = card.type !== 'plain' && !teamless;
+    if (teamless) S.picked.push(nkey(c.person.name));
     save(); renderAll(true);
   }
   function primaryAction() {
@@ -454,7 +561,7 @@
   function newGame() {
     if ((S.log.length || S.round) && !confirm('Start a new game? Card counts and rounds will be reset.')) return;
     const start = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
-    S = { ...fresh(start), extras: S.extras, mix: S.mix, special: S.special, plain: S.plain, secs: S.secs };
+    S = { ...fresh(start), extras: S.extras, mix: S.mix, special: S.special, plain: S.plain, secs: S.secs, defaultPeople: S.defaultPeople };
     save(); renderAll(); loadPool();
   }
   function renderAll(animate) {
@@ -483,22 +590,28 @@
     else { $('start').value = S.start; alert('Cards per team can only change before the first round is recorded. Use "New game" to restart with a new number.'); }
   };
   document.addEventListener('keydown', (e) => {
+    if (!$('tour').classList.contains('hidden')) return;
     if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA', 'SUMMARY'].includes(document.activeElement.tagName)) { e.preventDefault(); draw(); }
   });
   $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
   $('addExtra').onclick = () => {
-    const bad = []; let added = 0;
+    let added = 0;
     $('extra').value.split('\n').map((l) => l.trim()).filter(Boolean).forEach((l) => {
-      const i = l.lastIndexOf(',');
-      const name = i > 0 ? l.slice(0, i).trim().replace(/\s+/g, ' ') : '';
-      const t = Number(l.slice(i + 1));
-      if (name && Number.isInteger(t) && t >= 1 && t <= 10) { S.extras.push({ name, team: t % 10 }); added++; } else bad.push(l);
+      const i = l.lastIndexOf(','), t = i > 0 ? Number(l.slice(i + 1)) : NaN;
+      if (i > 0 && Number.isInteger(t) && t >= 1 && t <= 10) S.extras.push({ name: l.slice(0, i).trim().replace(/\s+/g, ' '), team: t % 10 });
+      else S.extras.push({ name: l.replace(/\s+/g, ' '), team: null });
+      added++;
     });
-    save(); $('extra').value = bad.join('\n'); loadPool();
-    $('poolMsg').textContent = `Added ${added}.` + (bad.length ? ` Skipped ${bad.length} line(s), use "Name, team 1-10".` : '');
+    save(); $('extra').value = ''; loadPool();
+    $('poolMsg').textContent = `Added ${added}. The pool is now your custom list.`;
   };
-  $('clearExtra').onclick = () => { S.extras = []; save(); loadPool(); $('poolMsg').textContent = 'Added names removed.'; };
+  $('clearExtra').onclick = () => { S.extras = []; save(); loadPool(); $('poolMsg').textContent = 'Custom list cleared: using random participants + default people.'; };
+  $('redraw').onclick = () => { S.sample = null; save(); loadPool(); $('poolMsg').textContent = 'Drew a new random participant from each team.'; };
   $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
+  $('defaults').onchange = () => {
+    S.defaultPeople = $('defaults').value.split(',').map((s) => s.trim().replace(/\s+/g, ' ')).filter(Boolean);
+    save(); $('defaults').value = S.defaultPeople.join(', '); loadPool();
+  };
 
   // ---------- game balance + duration estimate ----------
   const PRESETS = {
@@ -508,7 +621,7 @@
   };
   function syncSettings() {
     $('wColor').value = S.mix.color; $('wNumber').value = S.mix.number; $('wBoth').value = S.mix.both;
-    $('sp').value = String(S.special); $('pl').value = String(S.plain); $('secs').value = S.secs;
+    $('sp').value = String(S.special); $('pl').value = String(S.plain); $('secs').value = S.secs; $('defaults').value = (S.defaultPeople || []).join(', ');
   }
   function readSettings() {
     const w = (id) => Math.max(0, Math.min(100, Math.floor(Number($(id).value) || 0)));
@@ -601,12 +714,12 @@
   const SPARK_COLORS = ['#ffd23f', '#ff8fc7', '#8fe3ff', '#c9a6ff', '#ffffff'];
   const SPARK_GLYPHS = ['✦', '✧', '★', '✶'];
   let busyUntil = 0, conjureId = 0;
-  function spark(x, y, o = {}) {
+  function spark(x, y, o = {}, parent = $('fx')) {
     const s = document.createElement('div'); s.className = 'spark';
     s.textContent = pick(SPARK_GLYPHS);
     s.style.left = x + 'px'; s.style.top = y + 'px';
     s.style.color = pick(SPARK_COLORS); s.style.fontSize = (o.size || 8 + rnd() * 14) + 'px';
-    $('fx').appendChild(s);
+    parent.appendChild(s);
     const dx = o.dx != null ? o.dx : (rnd() - 0.5) * 36, dy = o.dy != null ? o.dy : 12 + rnd() * 38;
     const a = s.animate([
       { transform: 'translate(-50%,-50%) scale(.2) rotate(0deg)', opacity: 0 },
@@ -615,10 +728,10 @@
     ], { duration: o.dur || 600 + rnd() * 500, easing: 'ease-out' });
     a.onfinish = () => s.remove();
   }
-  function burst(cx, cy, n, radius) {
+  function burst(cx, cy, n, radius, parent) {
     for (let i = 0; i < n; i++) {
       const ang = (i / n) * Math.PI * 2 + rnd() * 0.4, dist = radius * (0.45 + rnd() * 0.75);
-      spark(cx, cy, { dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist, dur: 700 + rnd() * 600, size: 10 + rnd() * 18 });
+      spark(cx, cy, { dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist, dur: 700 + rnd() * 600, size: 10 + rnd() * 18 }, parent);
     }
   }
   function conjure(special) {
@@ -769,7 +882,166 @@
         { duration: 1000, easing: 'ease-out' }).onfinish = () => ring.remove();
     }, t));
   }
+
+  // ---------- guide tour (animated "how to play") ----------
+  const AUTO_MS = 9000;
+  const mk = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+  let tourStep = 0, tourClean = [], tourAuto = true, tourTimer = null, tourTok = 0;
+  const tourLater = (fn, ms) => { const t = setTimeout(fn, ms); tourClean.push(() => clearTimeout(t)); return t; };
+  const tourEvery = (fn, ms) => { const t = setInterval(fn, ms); tourClean.push(() => clearInterval(t)); return t; };
+  const tourAnim = (el, kf, opt) => { const a = el.animate(kf, opt); tourClean.push(() => a.cancel()); return a; };
+  const stageSize = (st) => [st.clientWidth || 600, st.clientHeight || 280];
+  function trailOf(st, f, ms) {   // sparkles from the fairy's wand
+    tourEvery(() => {
+      const r = f.getBoundingClientRect(), s = st.getBoundingClientRect();
+      spark(r.left - s.left + r.width * 0.88, r.top - s.top + r.height * 0.3, { size: 8 + rnd() * 10 }, st);
+    }, ms || 60);
+  }
+  function sceneWelcome(st) {
+    const row = mk('div', 'tour-teams');
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n, i) => {
+      const d = mk('div', 'tt', (window.TEAM_AVATARS || {})[n] || ''); d.style.animationDelay = `${i * 140}ms`;
+      d.append(mk('span', null, `Team ${teamNo(n)}`)); row.append(d);
+    });
+    const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(row, f);
+    const [W, H] = stageSize(st);
+    tourAnim(f, [
+      { transform: `translate(-120px, ${H * 0.6}px)` }, { transform: `translate(${W * 0.3}px, ${H * 0.05}px)` },
+      { transform: `translate(${W * 0.6}px, ${H * 0.4}px)` }, { transform: `translate(${W * 0.88}px, ${H * 0.02}px)` },
+      { transform: `translate(${W + 120}px, ${H * 0.5}px)` },
+    ], { duration: 5200, iterations: Infinity, easing: 'ease-in-out' });
+    trailOf(st, f);
+  }
+  function scenePick(st) {
+    const names = [...(S.defaultPeople || []), 'Anna', 'Binh', 'Chi', 'Dung', 'Em', 'Phuc'];
+    const nm = mk('div', 'tour-slotname', '…'), box = mk('div', 'tour-slot'), res = mk('div', 'tour-slotres');
+    box.append(nm); st.append(box, res);
+    const cycle = () => {
+      res.replaceChildren(); nm.classList.remove('land');
+      const iv = setInterval(() => { nm.textContent = pick(names); }, 80); tourClean.push(() => clearInterval(iv));
+      tourLater(() => {
+        clearInterval(iv); nm.textContent = pick(['Anna', 'Binh', 'Chi', 'Dung']); nm.classList.add('land');
+        const n = 1 + ri(9);
+        res.append(mk('div', 'tour-slotava', (window.TEAM_AVATARS || {})[n] || ''), mk('div', null, `Team ${teamNo(n)}${teamNames[n] ? ' · ' + teamNames[n] : ''}`));
+      }, 1500);
+      tourLater(cycle, 4400);
+    };
+    cycle();
+  }
+  function sceneConjure(st) {
+    const card = mk('div', 'tour-card', cardSvg({ type: 'normal', color: 'blue', number: 7, option: { kind: 'color', value: 'red' } }));
+    const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(card, f);
+    const [W, H] = stageSize(st), DUR = 4400;
+    tourAnim(card, [
+      { opacity: 0, transform: 'scale(.1) rotate(-25deg)', offset: 0 }, { opacity: 0, transform: 'scale(.1) rotate(-25deg)', offset: 0.25 },
+      { opacity: 1, transform: 'scale(1.1) rotate(4deg)', offset: 0.5 }, { opacity: 1, transform: 'scale(1)', offset: 0.62 },
+      { opacity: 1, transform: 'scale(1)', offset: 0.9 }, { opacity: 0, transform: 'scale(1)', offset: 1 },
+    ], { duration: DUR, iterations: Infinity });
+    tourAnim(f, [
+      { transform: `translate(-120px, ${H * 0.5}px)`, offset: 0 }, { transform: `translate(${W * 0.25}px, ${H * 0.02}px)`, offset: 0.2 },
+      { transform: `translate(${W * 0.5 - 43}px, ${H * 0.25}px)`, offset: 0.36 }, { transform: `translate(${W * 0.76}px, ${H * 0.04}px)`, offset: 0.55 },
+      { transform: `translate(${W + 120}px, ${H * 0.3}px)`, offset: 0.8 }, { transform: `translate(${W + 120}px, ${H * 0.3}px)`, offset: 1 },
+    ], { duration: DUR, iterations: Infinity });
+    trailOf(st, f);
+    const pop = () => tourLater(() => burst(W / 2, H / 2, 24, 140, st), 1150);
+    pop(); tourEvery(pop, DUR);
+  }
+  function sceneBadge(st) {
+    const defs = [
+      { card: { type: 'normal', color: 'yellow', number: 1, option: { kind: 'color', value: 'green' } }, cap: 'Colour: every GREEN card' },
+      { card: { type: 'normal', color: 'red', number: 7, option: { kind: 'number', value: 6 } }, cap: 'Number: every card numbered 6' },
+      { card: { type: 'normal', color: 'blue', number: 2, option: { kind: 'both', color: 'green', number: 5 } }, cap: 'Colour + number: only the green 5' },
+    ];
+    const row = mk('div', 'tour-badges');
+    const items = defs.map((d) => {
+      const w = mk('div', 'tb'), c = mk('div', 'tb-card', cardSvg(d.card));
+      c.append(mk('i', 'tb-ring')); w.append(c, mk('div', 'tb-cap', d.cap)); row.append(w); return w;
+    });
+    st.append(row);
+    let i = 0; const on = () => items.forEach((w, k) => w.classList.toggle('on', k === i));
+    on(); tourEvery(() => { i = (i + 1) % items.length; on(); }, 2300);
+  }
+  function sceneDiscard(st) {
+    const hand = [['green', 4], ['red', 2], ['green', 9], ['blue', 5], ['green', 1], ['yellow', 7], ['green', 3], ['red', 8], ['blue', 0], ['green', 6]];
+    const head = mk('div', 'tour-dhead', 'CHECK <span class="dotg"></span> GREEN');
+    const row = mk('div', 'tour-hand'), count = mk('div', 'tour-count');
+    const cards = hand.map(([c, n]) => { const d = mk('div', 'hc', String(n)); d.style.background = COLORS[c].hex; row.append(d); return d; });
+    st.append(head, row, count);
+    const go = () => {
+      cards.forEach((d) => d.classList.remove('gone'));
+      let left = hand.length, k = 0; count.textContent = `${left} cards`;
+      hand.forEach(([c], i) => {
+        if (c !== 'green') return;
+        tourLater(() => { cards[i].classList.add('gone'); left--; count.textContent = `${left} cards left`; }, 1000 + 500 * k++);
+      });
+      tourLater(go, 1000 + 500 * k + 2200);
+    };
+    go();
+  }
+  function sceneSpecial(st) {
+    const rays = mk('div', 'tour-rays'), card = mk('div', 'tour-card', cardSvg({ type: 'special', number: 3 }));
+    const chip = mk('div', 'tour-chip', `<span class="tca">${(window.TEAM_AVATARS || {})[3] || ''}</span>Team 3 may remove ALL cards of one colour`);
+    st.append(rays, card, chip);
+    tourAnim(card, [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(360deg)' }], { duration: 3600, iterations: Infinity, easing: 'ease-in-out' });
+    tourAnim(rays, [{ transform: 'translate(-50%,-50%) rotate(0deg)' }, { transform: 'translate(-50%,-50%) rotate(360deg)' }], { duration: 9000, iterations: Infinity, easing: 'linear' });
+    const [W, H] = stageSize(st);
+    tourEvery(() => spark(W / 2 + (rnd() - 0.5) * 240, H / 2 + (rnd() - 0.5) * 190, { size: 10 + rnd() * 14 }, st), 110);
+  }
+  function sceneWin(st) {
+    const t = mk('div', 'tour-trophy', '🏆'); st.append(t);
+    tourAnim(t, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-18px) scale(1.12)' }, { transform: 'translateY(0) scale(1)' }], { duration: 1200, iterations: Infinity, easing: 'ease-in-out' });
+    const [W, H] = stageSize(st);
+    tourEvery(() => {
+      const s = mk('div', 'spark', pick(SPARK_GLYPHS));
+      s.style.left = Math.round(rnd() * W) + 'px'; s.style.top = '-20px'; s.style.fontSize = (12 + rnd() * 18) + 'px'; s.style.color = pick(SPARK_COLORS);
+      st.append(s);
+      s.animate([{ transform: 'translateY(0) rotate(0deg)', opacity: 1 }, { transform: `translateY(${H + 40}px) rotate(${Math.round(rnd() * 540)}deg)`, opacity: 0.9 }],
+        { duration: 1800 + rnd() * 1200, easing: 'ease-in' }).onfinish = () => s.remove();
+    }, 100);
+  }
+  const TOUR = [
+    { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: '10 teams, 40 number cards each. Be the first team to get rid of every card!' },
+    { title: '1 · Pick a person', scene: scenePick, text: 'A person is picked at random and their team is in play. Helpers without a team can be picked too: then nobody discards that round.' },
+    { title: '2 · The fairy conjures a card', scene: sceneConjure, text: 'The fairy creates a card for that person. Watch the little badge in the corner of the card!' },
+    { title: '3 · Read the corner badge', scene: sceneBadge, text: 'Colour: every card of that colour. Number: every card with that number. Colour + number: only that exact card. The big colour and number on the face do not count!' },
+    { title: '4 · Discard and count', scene: sceneDiscard, text: 'The picked team discards every matching card and tells the host how many. The host types the number and the team’s count goes down.' },
+    { title: '★ Special card', scene: sceneSpecial, text: 'A rainbow card with a star! The team whose number is on the card may remove ALL cards of one colour of their choice.' },
+    { title: 'Win the game', scene: sceneWin, text: 'The first team with no cards left wins. Keep an eye on the scoreboard!' },
+  ];
+  function showStep(i) {
+    tourClean.forEach((f) => f()); tourClean = []; clearTimeout(tourTimer);
+    tourStep = Math.max(0, Math.min(TOUR.length - 1, i));
+    const s = TOUR[tourStep], st = $('tourStage'), last = tourStep === TOUR.length - 1;
+    st.replaceChildren();
+    $('tourTitle').textContent = s.title; $('tourText').textContent = s.text;
+    $('tourDots').replaceChildren(...TOUR.map((_, k) => { const d = mk('i', k === tourStep ? 'on' : ''); d.onclick = () => { tourAuto = false; showStep(k); }; return d; }));
+    $('tourBack').disabled = tourStep === 0;
+    $('tourNext').textContent = last ? '▶ Start playing' : 'Next →';
+    $('tourSkip').classList.toggle('hidden', last);
+    const tok = ++tourTok;   // ignore scene builds queued by an earlier step
+    requestAnimationFrame(() => { if (tok === tourTok && !$('tour').classList.contains('hidden')) s.scene(st); });
+    const bar = $('tourBar'); bar.getAnimations().forEach((a) => a.cancel());
+    if (tourAuto && !last) {
+      bar.parentElement.style.visibility = 'visible';
+      bar.animate([{ width: '0%' }, { width: '100%' }], { duration: AUTO_MS, easing: 'linear' });
+      tourTimer = setTimeout(() => showStep(tourStep + 1), AUTO_MS);
+    } else bar.parentElement.style.visibility = 'hidden';
+  }
+  function openTour() { tourAuto = true; $('tour').classList.remove('hidden'); showStep(0); }
+  function closeTour() {
+    tourTok++; $('tour').classList.add('hidden'); tourClean.forEach((f) => f()); tourClean = []; clearTimeout(tourTimer);
+    try { localStorage.setItem('unoTourSeen', '1'); } catch {}
+  }
+  const tourGo = (d) => { tourAuto = false; if (d > 0 && tourStep === TOUR.length - 1) closeTour(); else showStep(tourStep + d); };
+  $('helpBtn').onclick = openTour;
+  $('tourX').onclick = closeTour; $('tourSkip').onclick = closeTour;
+  $('tourNext').onclick = () => tourGo(1); $('tourBack').onclick = () => tourGo(-1);
+  document.addEventListener('keydown', (e) => {
+    if ($('tour').classList.contains('hidden')) return;
+    if (e.key === 'ArrowRight') tourGo(1); else if (e.key === 'ArrowLeft') tourGo(-1); else if (e.key === 'Escape') closeTour();
+  });
   renderAll(); loadPool(); scheduleEstimate();
+  try { if (!localStorage.getItem('unoTourSeen')) setTimeout(openTour, 700); } catch {}   // first visit: show the guide
 </script>
 </body>
 </html>
