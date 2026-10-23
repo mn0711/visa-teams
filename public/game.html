@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Uno Teams - Host</title>
+<title>Uno Fairy - Host</title>
 <style>
   :root { --text:#eef0f6; --muted:#9aa3b8; --panel:#1a1f2d; --line:#ffffff22; --gold:#ffd23f; }
   * { box-sizing: border-box; }
@@ -15,10 +15,28 @@
   button, a.btn, select { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:inherit; cursor:pointer; text-decoration:none; }
   label { color:var(--muted); font-size:.9rem; display:flex; align-items:center; gap:6px; }
   .stage { flex:1; width:100%; max-width:1100px; display:flex; flex-wrap:wrap; gap:24px; align-items:center; justify-content:center; }
-  #card { height:min(66vh, 560px); aspect-ratio:2/3; filter:drop-shadow(0 18px 30px #000a); }
+  #cardWrap { position:relative; height:min(66vh, 560px); aspect-ratio:2/3; perspective:1100px; isolation:isolate; }
+  #card { width:100%; height:100%; filter:drop-shadow(0 18px 30px #000a); }
+  #fx { position:absolute; inset:0; pointer-events:none; z-index:5; overflow:visible; }
+  .fairy { position:absolute; left:0; top:0; width:clamp(72px,12vh,112px); aspect-ratio:1; filter:drop-shadow(0 0 12px #ffd23fcc) drop-shadow(0 0 22px #ff8fc799); will-change:transform; }
+  .fairy svg { width:100%; height:100%; overflow:visible; }
+  .fairy .wing { transform-box:fill-box; transform-origin:70% 50%; animation:flap .16s ease-in-out infinite alternate; }
+  .fairy .wing.r { transform-origin:30% 50%; }
+  @keyframes flap { from { transform:scaleX(1) rotate(0); } to { transform:scaleX(.55) rotate(-8deg); } }
+  .spark { position:absolute; pointer-events:none; line-height:1; text-shadow:0 0 8px currentColor; will-change:transform,opacity; }
+  .ring { position:absolute; left:50%; top:50%; width:60%; aspect-ratio:1; border-radius:50%; border:4px solid #ffd23f; box-shadow:0 0 30px #ffd23f, inset 0 0 30px #ffd23f66; }
+  .rays { position:absolute; left:50%; top:50%; width:280%; aspect-ratio:1; z-index:-1; pointer-events:none; border-radius:50%;
+          background:repeating-conic-gradient(from 0deg, #ffd23f77 0 7deg, transparent 7deg 22deg);
+          -webkit-mask-image:radial-gradient(circle, #000 8%, transparent 60%); mask-image:radial-gradient(circle, #000 8%, transparent 60%); }
+  #screenfx { position:fixed; inset:0; z-index:40; pointer-events:none; overflow:hidden; }
+  #screenfx .flash { position:absolute; inset:0; background:radial-gradient(circle at 50% 50%, #fff 0, #ffd23faa 35%, transparent 72%); }
+  #screenfx .banner { position:absolute; left:50%; top:9%; transform:translateX(-50%); text-align:center; white-space:nowrap; font-weight:900; color:#ffd23f;
+                      font-size:clamp(1.8rem,6vw,4rem); letter-spacing:.06em; text-shadow:0 0 18px #ffd23f, 0 4px 0 #8a6200, 0 0 40px #ff8fc7; }
+  #screenfx .banner small { display:block; font-size:.42em; color:#fff; letter-spacing:.02em; text-shadow:0 2px 6px #000; }
+  #screenfx .star { position:absolute; top:0; line-height:1; text-shadow:0 0 8px currentColor; }
+  .logo { display:inline-block; width:1.5em; height:1.5em; vertical-align:-.35em; }
+  .logo svg { width:100%; height:100%; }
   #card svg { width:100%; height:100%; display:block; }
-  #card.flip { animation:flip .5s ease; }
-  @keyframes flip { from { transform:rotateY(90deg) scale(.9); opacity:0; } to { transform:none; opacity:1; } }
   .info { flex:1; min-width:260px; max-width:440px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; text-align:center; }
   .info .big { font-size:clamp(1.6rem,3.6vw,2.6rem); font-weight:800; line-height:1.15; margin:4px 0 8px; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
   .info .sub { color:var(--muted); }
@@ -69,7 +87,7 @@
 </head>
 <body>
 <div class="top">
-  <h1>🎴 Uno Teams <span class="round" id="round"></span></h1>
+  <h1><span class="logo" id="logo"></span> Uno Fairy <span class="round" id="round"></span></h1>
   <button id="fs">⛶ Full screen</button>
   <label>Cards per team <input id="start" type="number" min="1" max="200" value="40"></label>
   <button id="undo">&#8630; Undo last</button>
@@ -78,15 +96,15 @@
 </div>
 
 <div class="stage">
-  <div id="card"></div>
+  <div id="cardWrap"><div id="card"></div><div id="fx"></div></div>
   <div class="info" id="info">
     <div class="big">Ready?</div>
-    <div class="sub">Press the button (or Space) to draw the first card.</div>
+    <div class="sub">Press the button (or Space) to pick the first person.</div>
   </div>
 </div>
 
 <div class="action hidden" id="action"></div>
-<button class="draw" id="draw">Draw card <small>(Space)</small></button>
+<button class="draw" id="draw">🎲 Pick a person <small>(Space)</small></button>
 <div class="hist" id="hist" aria-label="Previous cards"></div>
 <div class="teams" id="teams"></div>
 <div class="log" id="log"></div>
@@ -207,7 +225,13 @@
   }
   function setInfo(c) {
     const info = $('info'); info.replaceChildren();
-    if (!c) { info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to draw the first card.</div>'; return; }
+    if (!c) {
+      const cur = S.current;
+      if (cur && cur.person) info.innerHTML = '<div class="big">🧚 Card incoming…</div><div class="sub">Press <b>Conjure card</b> and the fairy creates the card for this person.</div>';
+      else if (cur) info.innerHTML = '<div class="big">Picking…</div>';
+      else info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first person.</div>';
+      return;
+    }
     const big = document.createElement('div'); big.className = 'big';
     const sub = document.createElement('div'); sub.className = 'sub';
     const hint = document.createElement('div'); hint.className = 'hint';
@@ -250,7 +274,7 @@
   const currentTeam = () => {
     const c = S.current;
     if (!c || !c.pending) return null;
-    if (c.card.type === 'special') return c.card.number;
+    if (c.card && c.card.type === 'special') return c.card.number;
     return c.person ? c.person.team : null;
   };
   function buildChips() {
@@ -327,22 +351,38 @@
     if (!c) { box.classList.add('hidden'); return; }
     box.classList.remove('hidden');
     const add = (tag, cls, text, parent = box) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; parent.appendChild(e); return e; };
-    if (c.card.type === 'plain') { add('div', 'sub', 'No option this round, nothing to record. Draw the next card.'); return; }
-    if (!c.pending) { add('div', 'sub', '✓ Round recorded. Draw the next card.'); return; }
-    let team;
-    if (c.card.type === 'special') {
-      team = c.card.number;
-      add('div', 'who', `★ Special: Team ${teamNo(team)}${nameOf(team)}`);
-    } else {
-      if (spinText != null) { add('div', 'spin', spinText); return; }
-      if (!c.person) { add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
-      team = c.person.team;
+    const showPerson = () => {
+      const team = c.person.team;
       const row = add('div', 'person');
       const ava = add('div', 'pava', null, row); ava.innerHTML = (window.TEAM_AVATARS || {})[team] || '';
       const txt = add('div', null, null, row);
       add('div', 'pname', c.person.name, txt);
       add('div', 'sub', `Team ${teamNo(team)}${nameOf(team)}`, txt);
-      add('button', null, '🎲 Pick again').onclick = pickPerson;
+    };
+    // Stage 1: pick a person. Stage 2: the fairy conjures the card for them.
+    if (!c.card) {
+      if (spinText != null) { add('div', 'spin', spinText); return; }
+      if (!c.person) { add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
+      showPerson();
+      const r = add('div', 'row');
+      add('button', null, '🎲 Pick again', r).onclick = pickPerson;
+      add('button', 'primary', '🧚 Conjure card', r).onclick = conjureCard;
+      return;
+    }
+    if (c.card.type === 'plain') {
+      if (c.person) showPerson();
+      add('div', 'sub', 'Number card only: no option this round, nothing to record.');
+      return;
+    }
+    if (!c.pending) { add('div', 'sub', '✓ Round recorded. Pick the next person.'); return; }
+    let team;
+    if (c.card.type === 'special') {
+      team = c.card.number;
+      add('div', 'who', `★ Special: Team ${teamNo(team)}${nameOf(team)}`);
+      if (c.person) add('div', 'sub', `${c.person.name} (Team ${teamNo(c.person.team)}) is not affected this round.`);
+    } else {
+      showPerson();
+      team = c.person.team;
     }
     const left = S.counts[team];
     const r = add('div', 'row');
@@ -352,20 +392,23 @@
     inp.onkeydown = (e) => { if (e.key === 'Enter') confirmRound(); };
     add('button', 'primary', 'Confirm', r).onclick = confirmRound;
     add('div', 'err').id = 'err';
-    setTimeout(() => inp.focus(), 0);
+    setTimeout(() => inp.focus({ preventScroll: true }), 0);
   }
   function confirmRound() {
     const c = S.current;
-    if (!c || !c.pending) return;
-    const team = c.card.type === 'special' ? c.card.number : c.person ? c.person.team : null;
+    if (!c || !c.card || !c.pending) return;
+    const special = c.card.type === 'special';
+    const team = special ? c.card.number : c.person ? c.person.team : null;
     if (team == null) return;
     const raw = $('removed').value;
     const n = Number(raw === '' ? 0 : raw);
     if (!Number.isInteger(n) || n < 0 || n > S.counts[team]) { $('err').textContent = `Enter a whole number from 0 to ${S.counts[team]}.`; return; }
     S.counts[team] -= n;
-    if (c.person) S.picked.push(nkey(c.person.name));
-    S.log.unshift({ round: S.round, team, removed: n, left: S.counts[team], special: c.card.type === 'special',
-                    person: c.person ? c.person.name : null, personObj: c.person, card: c.card });
+    // the picked person is only "used up" when their own team acted
+    const actor = special ? null : c.person;
+    if (actor) S.picked.push(nkey(actor.name));
+    S.log.unshift({ round: S.round, team, removed: n, left: S.counts[team], special,
+                    person: actor ? actor.name : null, personObj: actor, card: c.card });
     c.pending = false;
     if (S.counts[team] === 0) S.won = team;
     save(); renderAll(); loadPool();
@@ -377,18 +420,37 @@
     if (e.personObj) S.picked = S.picked.filter((k) => k !== nkey(e.personObj.name));
     S.won = null;
     S.current = { card: e.card, person: e.personObj || null, pending: true };
-    save(); renderAll(true); loadPool();
+    save(); renderAll(); loadPool();
   }
-  function draw() {
-    if (S.won != null || picking) return;
-    if (S.current && S.current.pending && !confirm('This round has not been recorded yet. Draw the next card anyway?')) return;
-    if (S.current) S.history.unshift(S.current.card);
+  async function startRound() {
+    if (S.won != null || picking || Date.now() < busyUntil) return;
+    const c = S.current;
+    if (c && c.card && c.pending && !confirm('This round has not been recorded yet. Start the next round anyway?')) return;
+    const { all } = await loadPool();
+    if (!all.length) { alert('The pick pool is empty. Add names under "Pick pool" below.'); return; }
+    if (c && c.card) S.history.unshift(c.card);
     S.history = S.history.slice(0, 10);
     S.round++;
-    const c = newCard();
-    S.current = { card: c, person: null, pending: c.type !== 'plain' };
+    S.current = { card: null, person: null, pending: true };
+    save(); renderAll();
+    pickPerson();
+  }
+  function conjureCard() {
+    const c = S.current;
+    if (!c || c.card || !c.person || picking || S.won != null) return;
+    const card = newCard();
+    c.card = card; c.pending = card.type !== 'plain';
     save(); renderAll(true);
   }
+  function primaryAction() {
+    if (S.won != null || picking || Date.now() < busyUntil) return;
+    const c = S.current;
+    if (!c || (c.card && !c.pending)) startRound();
+    else if (!c.card && !c.person) pickPerson();
+    else if (!c.card) conjureCard();
+    else startRound();
+  }
+  const draw = primaryAction;
   function newGame() {
     if ((S.log.length || S.round) && !confirm('Start a new game? Card counts and rounds will be reset.')) return;
     const start = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
@@ -400,11 +462,15 @@
     $('start').value = S.start;
     syncSettings();
     const card = $('card');
-    card.innerHTML = S.current ? cardSvg(S.current.card) : '';
-    if (animate && S.current) { card.classList.remove('flip'); void card.offsetWidth; card.classList.add('flip'); }
+    card.innerHTML = S.current && S.current.card ? cardSvg(S.current.card) : '';
     setInfo(S.current && S.current.card);
     renderHist(); renderAction(); buildChips(); renderLog(); renderWin();
     $('draw').disabled = S.won != null;
+    const cur = S.current;
+    $('draw').innerHTML = !cur || (cur.card && !cur.pending) ? '🎲 Pick a person <small>(Space)</small>'
+      : !cur.card ? (cur.person ? '🧚 Conjure card <small>(Space)</small>' : '🎲 Pick a person <small>(Space)</small>')
+      : 'Skip to next round <small>(Space)</small>';
+    if (animate && S.current && S.current.card) conjure(S.current.card.type === 'special');
   }
 
   // ---------- wiring ----------
@@ -509,6 +575,200 @@
     b.onclick = () => { const p = PRESETS[b.dataset.p]; S.mix = { ...p.mix }; S.special = p.special; S.plain = p.plain; save(); syncSettings(); scheduleEstimate(); };
   });
   $('start').addEventListener('change', scheduleEstimate);
+
+  // ---------- Uno Fairy: icon + "the fairy conjures the card" animation ----------
+  const FAIRY_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairy">` +
+    `<g class="wing l"><ellipse cx="26" cy="46" rx="21" ry="12" transform="rotate(-28 26 46)" fill="#bfe9ff" stroke="#fff" stroke-width="2" opacity=".92"/>` +
+    `<ellipse cx="29" cy="64" rx="14" ry="8" transform="rotate(24 29 64)" fill="#e8c9ff" stroke="#fff" stroke-width="2" opacity=".92"/></g>` +
+    `<g class="wing r"><ellipse cx="74" cy="46" rx="21" ry="12" transform="rotate(28 74 46)" fill="#bfe9ff" stroke="#fff" stroke-width="2" opacity=".92"/>` +
+    `<ellipse cx="71" cy="64" rx="14" ry="8" transform="rotate(-24 71 64)" fill="#e8c9ff" stroke="#fff" stroke-width="2" opacity=".92"/></g>` +
+    `<path d="M37 62 Q50 56 63 62 L72 88 Q50 97 28 88Z" fill="#ff8fc7" stroke="#5a3a2a" stroke-width="2"/>` +
+    `<path d="M33 84 Q50 92 67 84" stroke="#fff" stroke-width="2" fill="none" opacity=".8"/>` +
+    `<ellipse cx="43" cy="93" rx="5" ry="3" fill="#ffe3c8" stroke="#5a3a2a" stroke-width="1.5"/><ellipse cx="57" cy="93" rx="5" ry="3" fill="#ffe3c8" stroke="#5a3a2a" stroke-width="1.5"/>` +
+    `<circle cx="50" cy="40" r="21" fill="#ffe3c8" stroke="#5a3a2a" stroke-width="2"/>` +
+    `<path d="M29 40 Q29 17 50 17 Q71 17 71 40 Q62 27 50 30 Q38 27 29 40Z" fill="#a24bd6"/><circle cx="50" cy="14" r="7" fill="#a24bd6"/>` +
+    `<path d="M44 12 l2 -4 2 4 4 .5 -3 3 .8 4 -3.8 -2 -3.8 2 .8 -4 -3 -3z" fill="#ffd23f" stroke="#c9961a" stroke-width="1"/>` +
+    `<ellipse cx="43" cy="42" rx="3.2" ry="4.5" fill="#2b2118"/><ellipse cx="57" cy="42" rx="3.2" ry="4.5" fill="#2b2118"/>` +
+    `<circle cx="44.2" cy="40.5" r="1.3" fill="#fff"/><circle cx="58.2" cy="40.5" r="1.3" fill="#fff"/>` +
+    `<ellipse cx="36" cy="50" rx="4" ry="2.5" fill="#ff8fa3" opacity=".75"/><ellipse cx="64" cy="50" rx="4" ry="2.5" fill="#ff8fa3" opacity=".75"/>` +
+    `<path d="M46 51 Q50 55 54 51" stroke="#5a3a2a" stroke-width="2" fill="none" stroke-linecap="round"/>` +
+    `<path d="M64 66 L86 42" stroke="#8b5a2b" stroke-width="3" stroke-linecap="round"/>` +
+    `<path d="M88 22 L91 29 L98.5 29.5 L92.7 34.3 L94.6 41.5 L88 37.5 L81.4 41.5 L83.3 34.3 L77.5 29.5 L85 29Z" fill="#ffd23f" stroke="#c9961a" stroke-width="1.5"/></svg>`;
+  $('logo').innerHTML = FAIRY_SVG;
+  { const l = document.createElement('link'); l.rel = 'icon'; l.href = 'data:image/svg+xml,' + encodeURIComponent(FAIRY_SVG.replace(/<g class="wing/g, '<g class="w')); document.head.appendChild(l); }
+
+  const REDUCED = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SPARK_COLORS = ['#ffd23f', '#ff8fc7', '#8fe3ff', '#c9a6ff', '#ffffff'];
+  const SPARK_GLYPHS = ['✦', '✧', '★', '✶'];
+  let busyUntil = 0, conjureId = 0;
+  function spark(x, y, o = {}) {
+    const s = document.createElement('div'); s.className = 'spark';
+    s.textContent = pick(SPARK_GLYPHS);
+    s.style.left = x + 'px'; s.style.top = y + 'px';
+    s.style.color = pick(SPARK_COLORS); s.style.fontSize = (o.size || 8 + rnd() * 14) + 'px';
+    $('fx').appendChild(s);
+    const dx = o.dx != null ? o.dx : (rnd() - 0.5) * 36, dy = o.dy != null ? o.dy : 12 + rnd() * 38;
+    const a = s.animate([
+      { transform: 'translate(-50%,-50%) scale(.2) rotate(0deg)', opacity: 0 },
+      { opacity: 1, offset: 0.25 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1) rotate(${Math.round((rnd() - 0.5) * 200)}deg)`, opacity: 0 },
+    ], { duration: o.dur || 600 + rnd() * 500, easing: 'ease-out' });
+    a.onfinish = () => s.remove();
+  }
+  function burst(cx, cy, n, radius) {
+    for (let i = 0; i < n; i++) {
+      const ang = (i / n) * Math.PI * 2 + rnd() * 0.4, dist = radius * (0.45 + rnd() * 0.75);
+      spark(cx, cy, { dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist, dur: 700 + rnd() * 600, size: 10 + rnd() * 18 });
+    }
+  }
+  function conjure(special) {
+    const id = ++conjureId, card = $('card'), wrap = $('cardWrap'), fx = $('fx'), info = $('info');
+    card.getAnimations().forEach((a) => a.cancel());
+    fx.replaceChildren();
+    wrap.querySelectorAll('.rays').forEach((r) => r.remove());
+    screenFx().replaceChildren();
+    if (REDUCED) { card.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 }); return; }
+    if (special) { conjureSpecial(id, card, wrap, fx, info, S.current.card); return; }
+    const TOTAL = 2300, W = wrap.clientWidth, H = wrap.clientHeight;
+    busyUntil = Date.now() + 1900;
+    const sh = ' drop-shadow(0 18px 30px #000a)';
+    // the card materialises once the wand passes over it
+    card.animate([
+      { opacity: 0, transform: 'scale(.12) rotate(-28deg)', filter: 'blur(10px) brightness(2.4)' + sh, offset: 0 },
+      { opacity: 0, transform: 'scale(.12) rotate(-28deg)', filter: 'blur(10px) brightness(2.4)' + sh, offset: 0.24 },
+      { opacity: 1, transform: 'scale(1.1) rotate(5deg)', filter: 'blur(0) brightness(1.6)' + sh, offset: 0.52 },
+      { opacity: 1, transform: 'scale(1) rotate(0deg)', filter: 'blur(0) brightness(1)' + sh, offset: 0.66 },
+      { opacity: 1, transform: 'scale(1) rotate(0deg)', filter: 'none' + sh, offset: 1 },
+    ], { duration: TOTAL * 0.7, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    info.animate([{ opacity: 0 }, { opacity: 0, offset: 0.55 }, { opacity: 1 }], { duration: 1500 });
+    // the fairy flies in, circles the card and flies off
+    const f = document.createElement('div'); f.className = 'fairy'; f.innerHTML = FAIRY_SVG; fx.appendChild(f);
+    const fw = f.offsetWidth || 90;
+    const path = [
+      [0, -0.35, 0.75, -8], [350, 0.10, 0.20, 6], [750, 0.50, -0.02, -6], [1050, 0.92, 0.32, 8],
+      [1350, 0.62, 0.78, 4], [1650, 0.12, 0.48, -6], [1950, 0.86, -0.04, 0], [2300, 1.35, -0.30, 8],
+    ];
+    const at = (p) => `translate(${p[1] * W - fw / 2}px, ${p[2] * H - fw / 2}px) rotate(${p[3]}deg)`;
+    f.animate(path.map((p, i) => ({ transform: at(p), opacity: i === path.length - 1 ? 0 : 1, offset: p[0] / TOTAL })),
+      { duration: TOTAL, easing: 'ease-in-out', fill: 'both' }).onfinish = () => f.remove();
+    // wand dust follows the fairy
+    const fxRect = fx.getBoundingClientRect();
+    let last = 0;
+    const t0 = performance.now();
+    (function trail(now) {
+      if (id !== conjureId || now - t0 > TOTAL) return;
+      if (now - last > 40 && f.isConnected) {
+        const r = f.getBoundingClientRect();
+        spark(r.left - fxRect.left + r.width * 0.88, r.top - fxRect.top + r.height * 0.3, { size: 7 + rnd() * 10 });
+        last = now;
+      }
+      requestAnimationFrame(trail);
+    })(t0);
+    setTimeout(() => { if (id === conjureId) burst(W / 2, H / 2, special ? 64 : 30, W * 0.75); }, 700);
+    setTimeout(() => { if (id === conjureId) burst(W / 2, H / 2, special ? 40 : 16, W * 0.55); }, 1250);
+  }
+
+  function screenFx() {
+    let s = document.getElementById('screenfx');
+    if (!s) { s = document.createElement('div'); s.id = 'screenfx'; document.body.appendChild(s); }
+    return s;
+  }
+  function conjureSpecial(id, card, wrap, fx, info, data) {
+    const TOTAL = 3400, W = wrap.clientWidth, H = wrap.clientHeight, sf = screenFx();
+    busyUntil = Date.now() + 3100;
+    const alive = () => id === conjureId;
+    const filt = (blur, bright, glowR) => `blur(${blur}px) brightness(${bright}) drop-shadow(0 0 ${glowR}px #ffd23f) drop-shadow(0 18px 30px #000a)`;
+    // spinning light rays behind the card
+    const rays = document.createElement('div'); rays.className = 'rays'; wrap.prepend(rays);
+    rays.animate([
+      { opacity: 0, transform: 'translate(-50%,-50%) rotate(0deg) scale(.4)' },
+      { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.8 },
+      { opacity: 0, transform: 'translate(-50%,-50%) rotate(220deg) scale(1.15)' },
+    ], { duration: TOTAL, easing: 'ease-in-out' }).onfinish = () => rays.remove();
+    // the card spins in with a golden glow
+    card.animate([
+      { opacity: 0, transform: 'scale(.1) rotateY(0deg)', filter: filt(10, 3, 0), offset: 0 },
+      { opacity: 0, transform: 'scale(.1) rotateY(0deg)', filter: filt(10, 3, 0), offset: 0.22 },
+      { opacity: 1, transform: 'scale(1.25) rotateY(540deg)', filter: filt(0, 1.8, 34), offset: 0.55 },
+      { opacity: 1, transform: 'scale(1) rotateY(720deg)', filter: filt(0, 1.2, 20), offset: 0.7 },
+      { opacity: 1, transform: 'scale(1.05) rotateY(720deg)', filter: filt(0, 1.35, 32), offset: 0.82 },
+      { opacity: 1, transform: 'scale(1) rotateY(720deg)', filter: filt(0, 1, 18), offset: 0.92 },
+      { opacity: 1, transform: 'scale(1) rotateY(720deg)', filter: filt(0, 1, 0), offset: 1 },
+    ], { duration: TOTAL * 0.85, easing: 'cubic-bezier(.2,.8,.3,1)' });
+    info.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration: 2100 });
+    // the fairy spirals twice around the card, then flies off
+    const f = document.createElement('div'); f.className = 'fairy'; f.innerHTML = FAIRY_SVG; fx.appendChild(f);
+    const fw = (f.offsetWidth || 90) * 1.4;
+    f.style.width = fw + 'px';
+    const pts = [[-0.4, 0.65, -10]];
+    const STEPS = 14;
+    for (let i = 0; i <= STEPS; i++) {
+      const ang = Math.PI * 1.2 + (i / STEPS) * Math.PI * 4.6, r = 0.95 - 0.35 * (i / STEPS);
+      pts.push([0.5 + Math.cos(ang) * r, 0.5 + Math.sin(ang) * r * 0.85, Math.round(Math.cos(ang) * 14)]);
+    }
+    pts.push([1.5, -0.45, 12]);
+    const times = pts.map((_, i) => (i / (pts.length - 1)));
+    f.animate(pts.map((p, i) => ({
+      transform: `translate(${p[0] * W - fw / 2}px, ${p[1] * H - fw / 2}px) rotate(${p[2]}deg)`,
+      opacity: i === pts.length - 1 ? 0 : 1, offset: times[i],
+    })), { duration: TOTAL, easing: 'linear', fill: 'both' }).onfinish = () => f.remove();
+    // rainbow dust trail, two sparks per tick
+    const fxRect = fx.getBoundingClientRect();
+    let last = 0; const t0 = performance.now();
+    (function trail(now) {
+      if (!alive() || now - t0 > TOTAL) return;
+      if (now - last > 30 && f.isConnected) {
+        const r = f.getBoundingClientRect();
+        for (let k = 0; k < 2; k++) spark(r.left - fxRect.left + r.width * 0.88, r.top - fxRect.top + r.height * 0.3, { size: 9 + rnd() * 14 });
+        last = now;
+      }
+      requestAnimationFrame(trail);
+    })(t0);
+    // golden flash + big banner when the card lands
+    setTimeout(() => {
+      if (!alive()) return;
+      const fl = document.createElement('div'); fl.className = 'flash'; sf.appendChild(fl);
+      fl.animate([{ opacity: 0 }, { opacity: 0.9, offset: 0.2 }, { opacity: 0 }], { duration: 900, easing: 'ease-out' }).onfinish = () => fl.remove();
+      const b = document.createElement('div'); b.className = 'banner';
+      const tn = data.number === 0 ? 10 : data.number;
+      b.innerHTML = '★ SPECIAL ★<small></small>';
+      b.querySelector('small').textContent = `Team ${tn}${teamNames[data.number] ? ' · ' + teamNames[data.number] : ''}`;
+      sf.appendChild(b);
+      b.animate([
+        { opacity: 0, transform: 'translateX(-50%) scale(.2) rotate(-10deg)' },
+        { opacity: 1, transform: 'translateX(-50%) scale(1.15) rotate(2deg)', offset: 0.25 },
+        { opacity: 1, transform: 'translateX(-50%) scale(1) rotate(0deg)', offset: 0.4 },
+        { opacity: 1, transform: 'translateX(-50%) scale(1) rotate(0deg)', offset: 0.85 },
+        { opacity: 0, transform: 'translateX(-50%) translateY(-30px) scale(1)' },
+      ], { duration: 2400, easing: 'ease-out' }).onfinish = () => b.remove();
+    }, 1000);
+    // shower of rainbow stars across the whole screen
+    setTimeout(() => {
+      if (!alive()) return;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      for (let i = 0; i < 70; i++) {
+        const s = document.createElement('div'); s.className = 'star';
+        s.textContent = pick(SPARK_GLYPHS); s.style.left = Math.round(rnd() * vw) + 'px';
+        s.style.fontSize = (12 + rnd() * 22) + 'px'; s.style.color = pick(['#ffd23f', '#ff6fb5', '#6fd8ff', '#b48cff', '#7dff9b', '#ffffff']);
+        sf.appendChild(s);
+        const sway = (rnd() - 0.5) * 140;
+        s.animate([
+          { transform: 'translate(0,-40px) rotate(0deg)', opacity: 1 },
+          { transform: `translate(${sway}px, ${vh * 0.55}px) rotate(${Math.round(rnd() * 360)}deg)`, opacity: 1, offset: 0.6 },
+          { transform: `translate(${sway * 1.5}px, ${vh + 40}px) rotate(${Math.round(rnd() * 720)}deg)`, opacity: 0 },
+        ], { duration: 1600 + rnd() * 1600, delay: rnd() * 700, easing: 'ease-in', fill: 'backwards' }).onfinish = () => s.remove();
+      }
+    }, 900);
+    // bursts + three expanding golden rings
+    [[800, 90, 0.9], [1450, 60, 0.7], [2100, 44, 0.55]].forEach(([t, n, rad]) =>
+      setTimeout(() => { if (alive()) burst(W / 2, H / 2, n, W * rad); }, t));
+    [800, 1050, 1300].forEach((t) => setTimeout(() => {
+      if (!alive()) return;
+      const ring = document.createElement('div'); ring.className = 'ring'; fx.appendChild(ring);
+      ring.animate([{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0 }],
+        { duration: 1000, easing: 'ease-out' }).onfinish = () => ring.remove();
+    }, t));
+  }
   renderAll(); loadPool(); scheduleEstimate();
 </script>
 </body>
