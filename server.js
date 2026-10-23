@@ -111,18 +111,53 @@ function safeEqual(a, b) {
   const hb = crypto.createHash('sha256').update(b).digest();
   return crypto.timingSafeEqual(ha, hb);
 }
+// Admin auth: a login form sets a signed session cookie (survives restarts, ends when the password changes).
+// HTTP Basic is still accepted for scripts (curl -u admin:pass).
+const SESSION_SECRET = crypto.createHmac('sha256', ADMIN_PASSWORD).update('visa-teams-session').digest();
+const SESSION_MS = 12 * 60 * 60 * 1000;
+const sign = (payload) => crypto.createHmac('sha256', SESSION_SECRET).update(payload).digest('hex');
+function makeSession() { const exp = String(Date.now() + SESSION_MS); return `${exp}.${sign(exp)}`; }
+function cookieOf(req, name) {
+  const m = (req.headers.cookie || '').split(';').map((c) => c.trim()).find((c) => c.startsWith(name + '='));
+  return m ? decodeURIComponent(m.slice(name.length + 1)) : '';
+}
+function validSession(token) {
+  const [exp, sig] = String(token).split('.');
+  if (!exp || !sig || !(Number(exp) > Date.now())) return false;
+  const want = sign(exp);
+  return sig.length === want.length && crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(want));
+}
 function isAdmin(req) {
+  if (validSession(cookieOf(req, 'admin_session'))) return true;
   const h = req.headers.authorization || '';
   if (!h.startsWith('Basic ')) return false;
   const [u, ...p] = Buffer.from(h.slice(6), 'base64').toString().split(':');
   return safeEqual(u, ADMIN_USER) && safeEqual(p.join(':'), ADMIN_PASSWORD);
 }
+// API routes: JSON 401 (no browser popup). Page routes use servePage() below.
 function requireAdmin(req, res) {
   if (isAdmin(req)) return true;
-  res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="Admin"', 'Content-Type': 'text/plain' });
-  res.end('Authentication required');
+  send(res, 401, { error: 'Unauthorized' });
   return false;
 }
+function servePage(req, res, file) {
+  serveFile(res, isAdmin(req) ? file : 'login.html');
+}
+const sessionCookie = (req, value, maxAge) =>
+  `admin_session=${encodeURIComponent(value)}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${maxAge}` +
+  ((req.headers['x-forwarded-proto'] || '') === 'https' ? '; Secure' : '');
+// Basic brute-force guard: 8 failed logins per IP per 10 minutes.
+const failures = new Map();
+function tooManyFailures(ip) {
+  const f = failures.get(ip);
+  return !!f && f.until > Date.now() && f.count >= 8;
+}
+function noteFailure(ip) {
+  const f = failures.get(ip);
+  if (!f || f.until <= Date.now()) failures.set(ip, { count: 1, until: Date.now() + 10 * 60 * 1000 });
+  else f.count++;
+}
+const clientIp = (req) => (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
 function publicBase(req) {
   if (BASE_URL) return BASE_URL;
   const proto = req.headers['x-forwarded-proto'] || 'http';
@@ -164,8 +199,22 @@ const server = http.createServer(async (req, res) => {
     }
 
     // Admin
-    if (p === '/game' && req.method === 'GET') return requireAdmin(req, res) && serveFile(res, 'game.html');
-    if (p === '/admin' && req.method === 'GET') return requireAdmin(req, res) && serveFile(res, 'admin.html');
+    if (p === '/api/admin/login' && req.method === 'POST') {
+      const ip = clientIp(req);
+      if (tooManyFailures(ip)) return send(res, 429, { error: 'Too many attempts. Try again in a few minutes.' });
+      const body = await readJson(req);
+      const ok = safeEqual(String(body.user || ''), ADMIN_USER) && safeEqual(String(body.password || ''), ADMIN_PASSWORD);
+      if (!ok) { noteFailure(ip); return send(res, 401, { error: 'Wrong username or password.' }); }
+      failures.delete(ip);
+      res.setHeader('Set-Cookie', sessionCookie(req, makeSession(), SESSION_MS / 1000));
+      return send(res, 200, { ok: true });
+    }
+    if (p === '/api/admin/logout' && req.method === 'POST') {
+      res.setHeader('Set-Cookie', sessionCookie(req, '', 0));
+      return send(res, 200, { ok: true });
+    }
+    if (p === '/game' && req.method === 'GET') return servePage(req, res, 'game.html');
+    if (p === '/admin' && req.method === 'GET') return servePage(req, res, 'admin.html');
     if (p === '/api/admin/entries' && req.method === 'GET') return requireAdmin(req, res) && send(res, 200, (await store.list()).map(named));
     if (p === '/api/admin/qr' && req.method === 'GET') {
       if (!requireAdmin(req, res)) return;

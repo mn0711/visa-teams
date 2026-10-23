@@ -44,7 +44,7 @@
   #qr-full svg { width:min(80vw,72vh); height:min(80vw,72vh); }
   #qr-full .u { font-size:clamp(1rem,2.2vw,1.8rem); word-break:break-all; text-align:center; }
   #qr-full button { position:absolute; top:12px; right:12px; color:#111; border-color:#8886; }
-  .hidden { display:none; }
+  .hidden { display:none !important; }
 </style>
 </head>
 <body>
@@ -61,6 +61,7 @@
       <a class="btn" href="/game">🎴 Game</a>
       <a class="btn" href="/api/admin/export.csv">CSV</a>
       <button class="danger" id="reset">Reset</button>
+      <button id="logout">Log out</button>
     </div>
     <div class="tabs">
       <button id="tab-teams" class="on">By team</button>
@@ -85,6 +86,7 @@
   const $ = (id) => document.getElementById(id);
   async function load() {
     const r = await fetch('/api/admin/entries');
+    if (r.status === 401) { location.reload(); return; }
     if (!r.ok) return;
     const list = await r.json();
     $('count').textContent = `${list.length} total`;
@@ -159,6 +161,7 @@
     $('qr').innerHTML = q.svg;
     $('url').textContent = q.url;
   })();
+  $('logout').onclick = async () => { await fetch('/api/admin/logout', { method: 'POST' }); location.reload(); };
   $('reset').onclick = async () => {
     if (!confirm('Delete ALL entries and restart numbering from 1?')) return;
     await fetch('/api/admin/reset', { method: 'POST' });
