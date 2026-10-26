@@ -142,6 +142,8 @@
   .tour-recv { position:absolute; right:14px; top:50%; margin-top:-66px; width:110px; text-align:center; font-weight:800; }
   .tour-recv svg { width:90px; height:90px; display:block; margin:0 auto 2px; overflow:visible; }
   .tour-flag { position:absolute; right:128px; top:30%; font-weight:900; color:var(--gold); opacity:0; transition:opacity .3s; text-shadow:0 2px 6px #000; }
+  .callout { padding:10px 18px; border-radius:12px; background:#3a3012; border:2px solid var(--gold); color:#fff; font-weight:800; font-size:clamp(1.05rem,2.4vw,1.5rem); animation:calloutpulse 1.4s ease-in-out infinite; }
+  @keyframes calloutpulse { 0%,100% { box-shadow:0 0 0 0 #ffd23f00; transform:scale(1); } 50% { box-shadow:0 0 22px 2px #ffd23f88; transform:scale(1.02); } }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -189,22 +191,12 @@
   </div>
 </details>
 <details class="pool" id="pool">
-  <summary>Pick pool: <span id="poolInfo">loading...</span></summary>
+  <summary>Receivers: <span id="poolInfo">loading...</span></summary>
   <div class="bal">
-    <p class="hint2" style="margin:8px 0 0">The picked person is only the <b>receiver</b>: teams bring their cards to them, and the team does not matter. By default the pool is <b>10 random participants</b> (one from each team, drawn once per game so it is fair) <b>plus the default people</b> below. If you enter a custom list, it <b>replaces</b> everything.</p>
-    <div class="balrow"><label style="flex:1;min-width:260px">Default people (comma separated)
-      <input id="defaults" type="text" placeholder="GDN, NUYY, PAMT, HUYC" style="flex:1;width:100%"></label></div>
-    <div class="hint2">Custom list: one name per line.</div>
-    <textarea id="extra" placeholder="Anna Le&#10;Binh Tran&#10;Guest Helper"></textarea>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button id="addExtra">Add to custom list</button>
-      <button id="clearExtra">Clear custom list</button>
-      <button id="redraw">Re-draw the 10 random participants</button>
-      <button id="clearPicked">Allow everyone to be picked again</button>
-    </div>
-    <div class="err" id="poolMsg" style="color:var(--muted)"></div>
-    <div class="hint2">Who is in the pool now (struck through = already picked this cycle, dashed = default people):</div>
+    <p class="hint2" style="margin:8px 0 0">The receiver is picked at random from the organisers below (fixed in the game code). Everyone is picked once before anyone repeats, and never twice in a row.</p>
     <div id="poolList" class="plist"></div>
+    <div><button id="clearPicked">Allow everyone to be picked again</button></div>
+    <div class="err" id="poolMsg" style="color:var(--muted)"></div>
   </div>
 </details>
 <div id="win" class="hidden"></div>
@@ -236,6 +228,8 @@
   const COLOR_KEYS = Object.keys(COLORS);
   const PLAIN_CHANCE = 0.10;               // plain number-only cards (no option)
   const teamNo = (n) => (n === 0 ? 10 : n); // number 0 = team 10
+  // A box holds only one 0 card, so the ban card plays the 0 (Team 10). Show it wherever a 0 would appear.
+  const numText = (n) => (n === 0 ? '🚫 ban card' : String(n));
   let teamNames = [];
   fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; if (typeof renderAll === 'function') renderAll(); }).catch(() => {});
 
@@ -245,6 +239,12 @@
   const pick = (arr) => arr[ri(arr.length)];
 
   // ---------- card artwork (Uno look) ----------
+  function banG(cx, cy, r, fill, outline) {   // the ban symbol: a ring with a diagonal bar
+    const t = r * 0.36, o = Math.max(1.2, r * 0.07), d = r * 0.68;
+    const ring = (c, w) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
+    const bar = (c, w) => `<line x1="${cx - d}" y1="${cy - d}" x2="${cx + d}" y2="${cy + d}" stroke="${c}" stroke-width="${w}"/>`;
+    return ring(outline, t + 2 * o) + bar(outline, t + 2 * o) + ring(fill, t) + bar(fill, t);
+  }
   function badge(opt) {
     if (opt.kind === 'color') {
       const c = COLORS[opt.value];
@@ -254,10 +254,12 @@
     if (opt.kind === 'both') {
       const c = COLORS[opt.color];
       return `<circle r="21" fill="${c.hex}" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/>` +
-        `<text y="10" text-anchor="middle" font-size="28" font-weight="900" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${opt.number}</text>`;
+        (opt.number === 0 ? banG(0, 1, 12, '#fff', '#111')
+          : `<text y="10" text-anchor="middle" font-size="28" font-weight="900" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${opt.number}</text>`);
     }
     return `<circle r="21" fill="#fff" stroke="#111" stroke-width="3"/>` +
-      `<text y="9" text-anchor="middle" font-size="26" font-weight="900" fill="#111">${opt.value}</text>`;
+      (opt.value === 0 ? banG(0, 0, 12, '#111', '#fff')
+        : `<text y="9" text-anchor="middle" font-size="26" font-weight="900" fill="#111">${opt.value}</text>`);
   }
   function cardSvg(c) {
     const special = c.type === 'special', plain = c.type === 'plain';
@@ -273,20 +275,24 @@
       `<g transform="${rot ? 'rotate(180 100 150) ' : ''}translate(160 42)">${badgeInner}` +
       `<text y="38" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${special ? 'SPECIAL' : 'CHECK'}</text></g>`;
     const font = `font-family="'Arial Black', Impact, system-ui, sans-serif" font-weight="900"`;
-    const corner = (rot) => `<text ${font} x="24" y="42" font-size="30" fill="#fff" stroke="#111" stroke-width="1.5" paint-order="stroke"${rot ? ' transform="rotate(180 100 150)"' : ''}>${c.number}</text>`;
+    const corner = (rot) => c.number === 0
+      ? `<g${rot ? ' transform="rotate(180 100 150)"' : ''}>${banG(35, 30, 11, '#fff', '#111')}</g>`
+      : `<text ${font} x="24" y="42" font-size="30" fill="#fff" stroke="#111" stroke-width="1.5" paint-order="stroke"${rot ? ' transform="rotate(180 100 150)"' : ''}>${c.number}</text>`;
     return `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img">` +
       `<defs><linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0262c"/><stop offset=".35" stop-color="#f5cf1a"/><stop offset=".7" stop-color="#3f9d3a"/><stop offset="1" stop-color="#1b6fc4"/></linearGradient></defs>` +
       `<rect width="200" height="300" rx="18" fill="#fff" stroke="#d6d6d6"/>` +
       `<rect x="10" y="10" width="180" height="280" rx="12" fill="${face}"/>` +
       `<ellipse cx="100" cy="150" rx="62" ry="108" fill="${oval}" transform="rotate(24 100 150)"/>` +
-      `<text ${font} x="100" y="194" text-anchor="middle" font-size="130" fill="${numFill}" stroke="${outline}" stroke-width="9" paint-order="stroke">${c.number}</text>` +
+      (c.number === 0 ? banG(100, 150, 44, numFill, outline)
+        : `<text ${font} x="100" y="194" text-anchor="middle" font-size="130" fill="${numFill}" stroke="${outline}" stroke-width="9" paint-order="stroke">${c.number}</text>`) +
       corner(false) + corner(true) + badgeG(false) + badgeG(true) + `</svg>`;
   }
 
   // ---------- game state (saved in this browser) ----------
   const KEY = 'unoGame.v1';
-  const SETTINGS = { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5, secs: 30, defaultPeople: ['GDN', 'NUYY', 'PAMT', 'HUYC'] };
-  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], extras: [], log: [], round: 0, history: [], current: null, won: null, sample: null, ...JSON.parse(JSON.stringify(SETTINGS)) });
+  const RECEIVERS = ['GDN', 'NUYY', 'PAMT', 'HUYC'];   // the organisers who receive the cards (fixed in the code)
+  const SETTINGS = { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5, secs: 30 };
+  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], last: null, log: [], round: 0, history: [], current: null, won: null, ...JSON.parse(JSON.stringify(SETTINGS)) });
   let S = fresh();
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -311,7 +317,7 @@
     const info = $('info'); info.replaceChildren();
     if (!c) {
       const cur = S.current;
-      if (cur && cur.person) info.innerHTML = '<div class="big">🧚 Card incoming…</div><div class="sub">Press <b>Conjure card</b> and the fairy creates the card. Then teams run to the receiver.</div>';
+      if (cur && cur.person) info.innerHTML = '<div class="big">🃏 Arrange your cards!</div><div class="sub">All teams: sort your cards by <b>colour</b> and <b>number</b>. When everyone is ready, press <b>Conjure card</b>.</div>';
       else if (cur) info.innerHTML = '<div class="big">Picking…</div>';
       else info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first person.</div>';
       return;
@@ -323,7 +329,7 @@
       big.classList.add('special');
       big.textContent = `★ SPECIAL: Team ${teamNo(c.number)}`;
       const ava = document.createElement('div'); ava.className = 'ava'; ava.innerHTML = (window.TEAM_AVATARS || {})[c.number] || '';
-      sub.textContent = (teamNames[c.number] ? teamNames[c.number] + ' may' : 'This team may') + ' remove ALL cards of ONE colour of their choice!';
+      sub.textContent = (teamNames[c.number] ? teamNames[c.number] + ' may' : 'This team may') + ' remove ALL cards of ONE colour of their choice!' + (c.number === 0 ? ' (Team 10 plays the ban card 🚫 as its 0.)' : '');
       info.append(big, ava, sub);
       return;
     }
@@ -336,16 +342,16 @@
     if (c.option.kind === 'both') {
       const col = COLORS[c.option.color];
       big.append('CHECK');
-      const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, `${col.name} ${c.option.number}`);
-      sub.textContent = `Only the ${col.name} ${c.option.number} counts. The first team to reach the receiver wins the round.`;
+      const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, `${col.name} ${numText(c.option.number)}`);
+      sub.textContent = `Only the ${col.name} ${c.option.number === 0 ? 'ban card 🚫 (the 0)' : c.option.number} counts. The first team to reach the receiver wins the round.`;
     } else if (c.option.kind === 'color') {
       const col = COLORS[c.option.value];
       big.append('CHECK COLOUR');
       const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, col.name);
       sub.textContent = `Teams holding ${col.name} cards run to the receiver. The first one there discards them all.`;
     } else {
-      big.textContent = `CHECK NUMBER ${c.option.value}`;
-      sub.textContent = `Teams holding a ${c.option.value} run to the receiver. The first one there discards them all.`;
+      big.textContent = `CHECK NUMBER ${numText(c.option.value)}`;
+      sub.textContent = `Teams holding ${c.option.value === 0 ? 'the ban card 🚫 (their 0)' : 'a ' + c.option.value} run to the receiver. The first one there discards them all.`;
     }
     hint.textContent = 'Only the corner badge counts. The card face is ignored.';
     info.append(big, sub, hint);
@@ -368,7 +374,7 @@
       const d = document.createElement('div');
       d.className = 'chip' + (cur === n ? ' hit' : '') + (S.won === n ? ' won' : '') + (ratio <= 0.25 ? ' crit' : ratio <= 0.5 ? ' low' : '');
       d.innerHTML = (window.TEAM_AVATARS || {})[n] || '';
-      const t = document.createElement('span'); t.textContent = `Team ${teamNo(n)}`;
+      const t = document.createElement('span'); t.textContent = `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`;
       const b = document.createElement('b'); b.textContent = cnt;
       const bar = document.createElement('i'); bar.style.width = `${Math.max(0, Math.round(ratio * 100))}%`;
       d.append(t, b, bar); d.title = teamNames[n] || ''; return d;
@@ -396,39 +402,19 @@
   }
 
   // ---------- pick pool ----------
-  let registered = [], spinText = null, picking = false;
-  const defaultPeople = () => (S.defaultPeople || []).map((n) => ({ name: n, team: null }));
-  function makeSample() {   // one random registered participant from each team that has people
-    const byTeam = {};
-    registered.forEach((p) => { (byTeam[p.team] = byTeam[p.team] || []).push(p); });
-    return [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].filter((t) => byTeam[t] && byTeam[t].length).map((t) => pick(byTeam[t]));
-  }
+  let spinText = null, picking = false;
   function renderPoolList(all) {
     $('poolList').replaceChildren(...all.map((p) => {
       const s = document.createElement('span');
-      s.className = 'pp' + (S.picked.includes(nkey(p.name)) ? ' used' : '') + ((S.defaultPeople || []).some((n) => nkey(n) === nkey(p.name)) ? ' free' : '');
+      s.className = 'pp' + (S.picked.includes(nkey(p.name)) ? ' used' : '');
       s.textContent = p.name;
       return s;
     }));
   }
-  async function loadPool() {
-    try {
-      const r = await fetch('/api/admin/entries', { cache: 'no-store' });
-      if (r.ok) registered = (await r.json()).map((e) => ({ name: e.name, team: e.team }));
-    } catch {}
-    const custom = S.extras.length > 0;
-    let base;
-    if (custom) base = S.extras;
-    else {
-      if (!S.sample && registered.length) { S.sample = makeSample(); save(); }
-      base = [...(S.sample || []), ...defaultPeople()];
-    }
-    const seen = new Set(), all = [];
-    base.forEach((p) => { const k = nkey(p.name); if (!seen.has(k)) { seen.add(k); all.push(p); } });
+  async function loadPool() {   // the receivers never change during a game
+    const all = RECEIVERS.map((name) => ({ name }));
     const avail = all.filter((p) => !S.picked.includes(nkey(p.name)));
-    $('poolInfo').textContent = custom
-      ? `custom list · ${all.length} people · ${avail.length} not picked yet`
-      : `auto · ${(S.sample || []).length} random participants (1 per team) + ${defaultPeople().length} default people · ${avail.length} not picked yet`;
+    $('poolInfo').textContent = `${RECEIVERS.join(' · ')} · ${avail.length} not picked yet`;
     renderPoolList(all);
     return { all, avail };
   }
@@ -436,16 +422,18 @@
     if (picking || !S.current || !S.current.pending) return;
     picking = true;
     let { all, avail } = await loadPool();
-    if (!all.length) { picking = false; alert('The pick pool is empty. Add names under "Pick pool" below.'); return; }
+    if (!all.length) { picking = false; alert('There are no receivers configured.'); return; }
     if (!avail.length) { S.picked = []; avail = all; $('poolMsg').textContent = 'Everyone has been picked once, starting a new cycle.'; }
-    const prev = S.current.person && nkey(S.current.person.name);
-    const choices = avail.length > 1 ? avail.filter((p) => nkey(p.name) !== prev) : avail;
+    // never the same receiver twice in a row (also covers "Pick again")
+    const exclude = [S.current.person && nkey(S.current.person.name), S.last].filter(Boolean);
+    let choices = avail.filter((p) => !exclude.includes(nkey(p.name)));
+    if (!choices.length) choices = avail;
     const chosen = pick(choices);
     const t0 = Date.now();
     const timer = setInterval(() => {
       if (Date.now() - t0 > 1200) {
         clearInterval(timer); spinText = null; picking = false;
-        S.current.person = chosen; save(); renderAll();
+        S.current.person = chosen; S.last = nkey(chosen.name); save(); renderAll();
         return;
       }
       spinText = pick(all).name; renderAction();
@@ -471,6 +459,7 @@
       if (spinText != null) { add('div', 'spin', spinText); return; }
       if (!c.person) { add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
       showPerson();
+      add('div', 'callout', '🃏 All teams: arrange your cards by colour and number now!');
       const r = add('div', 'row');
       add('button', null, '🎲 Pick again', r).onclick = pickPerson;
       add('button', 'primary', '🧚 Conjure card', r).onclick = conjureCard;
@@ -486,13 +475,13 @@
     let team;
     if (c.card.type === 'special') {
       team = c.card.number;
-      add('div', 'who', `★ Special: Team ${teamNo(team)}${nameOf(team)}`);
+      add('div', 'who', `★ Special: Team ${teamNo(team)}${team === 0 ? ' 🚫' : ''}${nameOf(team)}`);
     } else {
       add('div', 'sub', 'Which team reached the receiver first?');
       const sel = add('div', 'teamsel');
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n) => {
         const b = add('button', 'tsel' + (c.team === n ? ' on' : ''), null, sel);
-        b.innerHTML = `${(window.TEAM_AVATARS || {})[n] || ''}<span>${teamNo(n)}</span>`;
+        b.innerHTML = `${(window.TEAM_AVATARS || {})[n] || ''}<span>${teamNo(n)}${n === 0 ? '🚫' : ''}</span>`;
         b.title = `Team ${teamNo(n)}${nameOf(n)}`;
         b.onclick = () => { c.team = n; save(); renderAction(); buildChips(); };
       });
@@ -540,8 +529,6 @@
     if (S.won != null || picking || Date.now() < busyUntil) return;
     const c = S.current;
     if (c && c.card && c.pending && !confirm('This round has not been recorded yet. Start the next round anyway?')) return;
-    const { all } = await loadPool();
-    if (!all.length) { alert('The pick pool is empty. Add names under "Pick pool" below.'); return; }
     if (c && c.card) S.history.unshift(c.card);
     S.history = S.history.slice(0, 10);
     S.round++;
@@ -568,7 +555,7 @@
   function newGame() {
     if ((S.log.length || S.round) && !confirm('Start a new game? Card counts and rounds will be reset.')) return;
     const start = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
-    S = { ...fresh(start), extras: S.extras, mix: S.mix, special: S.special, plain: S.plain, secs: S.secs, defaultPeople: S.defaultPeople };
+    S = { ...fresh(start), mix: S.mix, special: S.special, plain: S.plain, secs: S.secs };
     save(); renderAll(); loadPool();
   }
   function renderAll(animate) {
@@ -601,23 +588,7 @@
     if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA', 'SUMMARY'].includes(document.activeElement.tagName)) { e.preventDefault(); draw(); }
   });
   $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
-  $('addExtra').onclick = () => {
-    let added = 0;
-    $('extra').value.split('\n').map((l) => l.trim()).filter(Boolean).forEach((l) => {
-      const i = l.lastIndexOf(','), t = i > 0 ? Number(l.slice(i + 1)) : NaN;   // an old-style ", team" suffix is ignored
-      const name = (i > 0 && Number.isInteger(t) && t >= 1 && t <= 10 ? l.slice(0, i) : l).trim().replace(/\s+/g, ' ');
-      if (name) { S.extras.push({ name, team: null }); added++; }
-    });
-    save(); $('extra').value = ''; loadPool();
-    $('poolMsg').textContent = `Added ${added}. The pool is now your custom list.`;
-  };
-  $('clearExtra').onclick = () => { S.extras = []; save(); loadPool(); $('poolMsg').textContent = 'Custom list cleared: using random participants + default people.'; };
-  $('redraw').onclick = () => { S.sample = null; save(); loadPool(); $('poolMsg').textContent = 'Drew a new random participant from each team.'; };
-  $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
-  $('defaults').onchange = () => {
-    S.defaultPeople = $('defaults').value.split(',').map((s) => s.trim().replace(/\s+/g, ' ')).filter(Boolean);
-    save(); $('defaults').value = S.defaultPeople.join(', '); loadPool();
-  };
+$('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
 
   // ---------- game balance + duration estimate ----------
   const PRESETS = {
@@ -627,7 +598,7 @@
   };
   function syncSettings() {
     $('wColor').value = S.mix.color; $('wNumber').value = S.mix.number; $('wBoth').value = S.mix.both;
-    $('sp').value = String(S.special); $('pl').value = String(S.plain); $('secs').value = S.secs; $('defaults').value = (S.defaultPeople || []).join(', ');
+    $('sp').value = String(S.special); $('pl').value = String(S.plain); $('secs').value = S.secs;
   }
   function readSettings() {
     const w = (id) => Math.max(0, Math.min(100, Math.floor(Number($(id).value) || 0)));
@@ -851,7 +822,7 @@
       const b = document.createElement('div'); b.className = 'banner';
       const tn = data.number === 0 ? 10 : data.number;
       b.innerHTML = '★ SPECIAL ★<small></small>';
-      b.querySelector('small').textContent = `Team ${tn}${teamNames[data.number] ? ' · ' + teamNames[data.number] : ''}`;
+      b.querySelector('small').textContent = `Team ${tn}${data.number === 0 ? ' 🚫' : ''}${teamNames[data.number] ? ' · ' + teamNames[data.number] : ''}`;
       sf.appendChild(b);
       b.animate([
         { opacity: 0, transform: 'translateX(-50%) scale(.2) rotate(-10deg)' },
@@ -907,7 +878,7 @@
     const row = mk('div', 'tour-teams');
     [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n, i) => {
       const d = mk('div', 'tt', (window.TEAM_AVATARS || {})[n] || ''); d.style.animationDelay = `${i * 140}ms`;
-      d.append(mk('span', null, `Team ${teamNo(n)}`)); row.append(d);
+      d.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(d);
     });
     const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(row, f);
     const [W, H] = stageSize(st);
@@ -919,14 +890,14 @@
     trailOf(st, f);
   }
   function scenePick(st) {
-    const names = [...(S.defaultPeople || []), 'Anna', 'Binh', 'Chi', 'Dung', 'Em', 'Phuc'];
+    const names = [...RECEIVERS];
     const nm = mk('div', 'tour-slotname', '…'), box = mk('div', 'tour-slot'), res = mk('div', 'tour-slotres');
     box.append(nm); st.append(box, res);
     const cycle = () => {
       res.replaceChildren(); nm.classList.remove('land');
       const iv = setInterval(() => { nm.textContent = pick(names); }, 80); tourClean.push(() => clearInterval(iv));
       tourLater(() => {
-        clearInterval(iv); nm.textContent = pick(['Anna', 'Binh', 'Chi', 'Dung']); nm.classList.add('land');
+        clearInterval(iv); nm.textContent = pick(RECEIVERS); nm.classList.add('land');
         res.append(mk('div', 'tour-slotava', FAIRY_SVG), mk('div', null, '📥 Receiver: teams bring their cards here'));
       }, 1500);
       tourLater(cycle, 4400);
@@ -970,7 +941,7 @@
     const hand = [['green', 4], ['red', 2], ['green', 9], ['blue', 5], ['green', 1], ['yellow', 7], ['green', 3], ['red', 8], ['blue', 0], ['green', 6]];
     const head = mk('div', 'tour-dhead', 'CHECK <span class="dotg"></span> GREEN');
     const row = mk('div', 'tour-hand'), count = mk('div', 'tour-count');
-    const cards = hand.map(([c, n]) => { const d = mk('div', 'hc', String(n)); d.style.background = COLORS[c].hex; row.append(d); return d; });
+    const cards = hand.map(([c, n]) => { const d = mk('div', 'hc', n === 0 ? '🚫' : String(n)); d.style.background = COLORS[c].hex; row.append(d); return d; });
     st.append(head, row, count);
     const go = () => {
       cards.forEach((d) => d.classList.remove('gone'));
@@ -1023,9 +994,9 @@
   }
   const TOUR = [
     { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: '10 teams, 40 number cards each. Be the first team to get rid of every card!' },
-    { title: '1 · Pick the receiver', scene: scenePick, text: 'A person is picked at random. They are only the receiver: teams will bring their cards to this person.' },
+    { title: '1 · Pick the receiver', scene: scenePick, text: 'One of the organisers is picked at random as the receiver: teams will bring their cards to them. While you wait, every team arranges its cards by colour and number!' },
     { title: '2 · The fairy conjures a card', scene: sceneConjure, text: 'The fairy creates a card. Watch the little badge in the corner of the card!' },
-    { title: '3 · Read the corner badge', scene: sceneBadge, text: 'Colour: every card of that colour. Number: every card with that number. Colour + number: only that exact card. The big colour and number on the face do not count!' },
+    { title: '3 · Read the corner badge', scene: sceneBadge, text: 'Colour: every card of that colour. Number: every card with that number. Colour + number: only that exact card. The big colour and number on the face do not count! The 0 is played with the ban card 🚫.' },
     { title: '4 · Race to the receiver', scene: sceneRace, text: 'Every team holding matching cards runs to the receiver. The first team to arrive wins the round!' },
     { title: '5 · Discard and count', scene: sceneDiscard, text: 'The winning team discards its matching cards and tells the host how many. The host picks the team, types the number, and the count goes down.' },
     { title: '★ Special card', scene: sceneSpecial, text: 'A rainbow card with a star! The team whose number is on the card may remove ALL cards of one colour of their choice.' },

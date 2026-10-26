@@ -94,7 +94,7 @@
     const tb = $('rows');
     tb.replaceChildren(...list.slice().reverse().map((e) => {
       const tr = document.createElement('tr');
-      [e.order, e.name, e.team, e.teamName, new Date(e.createdAt).toLocaleTimeString()].forEach((v, i) => {
+      [e.order, e.name, e.team === 0 ? 10 : e.team, e.teamName, new Date(e.createdAt).toLocaleTimeString()].forEach((v, i) => {
         const td = document.createElement('td');
         if (i === 2 || i === 3) td.className = 'team';
         if (i === 3) {
@@ -118,7 +118,7 @@
       card.className = 'team-card' + (members.length ? '' : ' empty');
       const h = document.createElement('h3');
       h.innerHTML = '<b></b><span></span>';
-      h.firstChild.textContent = `Team ${t}` + (teamNames[t] ? ` · ${teamNames[t]}` : '');
+      h.firstChild.textContent = `Team ${t === 0 ? 10 : t}${t === 0 ? ' 🚫' : ''}` + (teamNames[t] ? ` · ${teamNames[t]}` : '');
       h.lastChild.textContent = members.length;
       const ol = document.createElement('ol');
       members.forEach((m) => {

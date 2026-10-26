@@ -54,7 +54,7 @@
     $('form').classList.add('hidden');
     $('result').classList.remove('hidden');
     $('hello').textContent = e.name;
-    $('team').textContent = e.team;
+    $('team').textContent = e.team === 0 ? 10 : e.team;
     $('tname').textContent = e.teamName || '';
     const art = (window.TEAM_AVATARS || {})[e.team] || '';
     $('avatar').innerHTML = art;
@@ -67,7 +67,7 @@
       bg.classList.remove('hidden');
       document.body.classList.add('themed');
     }
-    $('meta').textContent = `You are number ${e.order}` + (e.duplicate ? ' (already registered)' : '');
+    $('meta').textContent = `You are number ${e.order}` + (e.duplicate ? ' (already registered)' : '') + (e.team === 0 ? ' · Your number card is the ban card 🚫' : '');
   }
   // Show a saved result only if the server still has it (an admin Reset invalidates old results).
   (async () => {
