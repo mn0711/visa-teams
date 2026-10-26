@@ -149,6 +149,13 @@
   .tsh > svg { width:32px; height:32px; display:block; margin:0 auto; }
   .sdeck { position:relative; width:30px; height:44px; margin:4px auto 6px; }
   .sc { position:absolute; inset:0; border:2px solid #fff; border-radius:6px; display:grid; place-items:center; font:900 14px system-ui; color:#fff; text-shadow:0 1px 0 #0006; }
+  .shufteams { display:grid; grid-template-columns:repeat(5,1fr); gap:10px 4px; margin:10px 0 12px; }
+  .shufteams .tsh { width:auto; font-size:.66rem; }
+  .shufteams .tsh > svg { width:30px; height:30px; }
+  .shufteams .sdeck { width:26px; height:38px; margin:4px auto 6px; }
+  .bigdeck { position:relative; width:100%; height:100%; }
+  .bk { position:absolute; left:18%; top:12%; width:64%; aspect-ratio:2/3; }
+  .bk svg { width:100%; height:100%; display:block; filter:drop-shadow(0 8px 14px #000a); }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -235,7 +242,6 @@
   const teamNo = (n) => (n === 0 ? 10 : n); // number 0 = team 10
   // A box holds only one 0 card, so the ban card plays the 0 (Team 10). Show it wherever a 0 would appear.
   const numText = (n) => (n === 0 ? '🚫 ban card' : String(n));
-  const SHUFFLE_HTML = '<div class="big">🔀 Shuffle your cards!</div><div class="sub">All teams: shuffle your cards now. When the card appears, find the matching cards and run to the receiver!</div>';
   const SHUFFLE_CALLOUT = '🔀 All teams: shuffle your cards now!';
   let teamNames = [];
   fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; if (typeof renderAll === 'function') renderAll(); }).catch(() => {});
@@ -321,10 +327,12 @@
     return { type:'normal', color:pick(COLOR_KEYS), number:ri(10), option };
   }
   function setInfo(c) {
-    const info = $('info'); info.replaceChildren();
+    const info = $('info');
+    if (!c && S.current && info.querySelector('.shufinfo')) return;   // keep the shuffle animation running
+    info.replaceChildren();
     if (!c) {
       const cur = S.current;
-      if (cur) info.innerHTML = SHUFFLE_HTML;   // from the moment the receiver starts being picked
+      if (cur) info.append(buildShuffleInfo());   // from the moment the receiver starts being picked
       else info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first person.</div>';
       return;
     }
@@ -569,7 +577,9 @@
     $('start').value = S.start;
     syncSettings();
     const card = $('card');
-    card.innerHTML = S.current && S.current.card ? cardSvg(S.current.card) : '';
+    if (S.current && S.current.card) card.innerHTML = cardSvg(S.current.card);
+    else if (S.current) { if (!card.querySelector('.bigdeck')) card.replaceChildren(buildBigDeck()); }   // teams are shuffling
+    else card.innerHTML = '';
     setInfo(S.current && S.current.card);
     renderHist(); renderAction(); buildChips(); renderLog(); renderWin();
     $('draw').disabled = S.won != null;
@@ -895,20 +905,53 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
     ], { duration: 5200, iterations: Infinity, easing: 'ease-in-out' });
     trailOf(st, f);
   }
-  function shuffleDeck(host, delay, seed = 0) {   // a little pile of cards being shuffled (riffled) over and over
+  function shuffleDeck(host, delay, seed = 0, anim = tourAnim) {   // a little pile of cards being shuffled (riffled) over and over
     const deck = mk('div', 'sdeck'); host.append(deck);
     const cols = ['red', 'blue', 'green', 'yellow', 'red', 'green', 'blue'];
     cols.forEach((_, i) => {
       const c = cols[(i + seed) % cols.length];
       const k = mk('div', 'sc', String(1 + ((i * 3 + seed * 2) % 9))); k.style.background = COLORS[c].hex; k.style.zIndex = i; deck.append(k);
       const dir = i % 2 ? 1 : -1;
-      tourAnim(k, [
+      if (REDUCED) return;
+      anim(k, [
         { transform: 'translate(0, 0) rotate(0deg)', offset: 0 },
         { transform: `translate(${dir * 24}px, ${-6 - i * 2}px) rotate(${dir * 14}deg)`, offset: 0.35 },
         { transform: `translate(${dir * 7}px, -3px) rotate(${-dir * 5}deg)`, offset: 0.7 },
         { transform: 'translate(0, 0) rotate(0deg)', offset: 1 },
       ], { duration: 1200, delay: delay + i * 70, iterations: Infinity, easing: 'ease-in-out' });
     });
+  }
+  const plainAnim = (el, kf, opt) => el.animate(kf, opt);
+  function buildShuffleInfo() {   // side panel while the receiver is picked: every team shuffles its cards
+    const w = mk('div', 'shufinfo');
+    w.append(mk('div', 'big', '🔀 Shuffle your cards!'));
+    const row = mk('div', 'shufteams');
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n, i) => {
+      const t = mk('div', 'tsh', (window.TEAM_AVATARS || {})[n] || '');
+      shuffleDeck(t, i * 110, i + 1, plainAnim);
+      t.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(t);
+    });
+    w.append(row, mk('div', 'sub', 'All teams: shuffle your cards now. When the card appears, find the matching cards and run to the receiver!'));
+    return w;
+  }
+  const cardBackSvg = () => `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6fb5"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#6fd8ff"/></linearGradient></defs>` +
+    `<rect width="200" height="300" rx="18" fill="#fff" stroke="#d6d6d6"/><rect x="10" y="10" width="180" height="280" rx="12" fill="#1b1f3a"/>` +
+    `<ellipse cx="100" cy="150" rx="62" ry="108" fill="url(#bkg)" transform="rotate(24 100 150)"/>` +
+    `<text x="100" y="178" text-anchor="middle" font-size="96" fill="#fff" stroke="#1b1f3a" stroke-width="6" paint-order="stroke">★</text></svg>`;
+  function buildBigDeck() {   // a big deck of card backs being shuffled where the card will appear
+    const d = mk('div', 'bigdeck');
+    for (let i = 0; i < 8; i++) {
+      const k = mk('div', 'bk', cardBackSvg()); k.style.zIndex = i; d.append(k);
+      if (REDUCED) continue;
+      const dir = i % 2 ? 1 : -1;
+      k.animate([
+        { transform: 'translate(0, 0) rotate(0deg)', offset: 0 },
+        { transform: `translate(${dir * 42}%, ${-4 - i}%) rotate(${dir * 12}deg)`, offset: 0.35 },
+        { transform: `translate(${dir * 10}%, -2%) rotate(${-dir * 4}deg)`, offset: 0.7 },
+        { transform: 'translate(0, 0) rotate(0deg)', offset: 1 },
+      ], { duration: 1300, delay: i * 80, iterations: Infinity, easing: 'ease-in-out' });
+    }
+    return d;
   }
   function scenePick(st) {
     const names = [...RECEIVERS];
