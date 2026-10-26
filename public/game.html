@@ -104,12 +104,12 @@
   .tt { width:54px; text-align:center; font-size:.7rem; color:var(--muted); animation:ttpop .5s both; }
   .tt svg { width:48px; height:48px; display:block; margin:0 auto; }
   @keyframes ttpop { from { transform:scale(0); opacity:0; } to { transform:none; opacity:1; } }
-  .tour-slot { position:absolute; left:50%; top:34%; transform:translate(-50%,-50%); min-width:min(300px,86%); padding:16px 26px; border-radius:16px; background:#0a0d18; border:3px solid var(--gold); box-shadow:0 0 24px #ffd23f66; }
-  .tour-slotname { font-size:clamp(1.5rem,5vw,2.2rem); font-weight:900; color:#fff; min-height:1.3em; }
+  .tour-slot { position:absolute; left:50%; top:20%; transform:translate(-50%,-50%); min-width:min(300px,86%); padding:8px 22px; border-radius:16px; background:#0a0d18; border:3px solid var(--gold); box-shadow:0 0 24px #ffd23f66; }
+  .tour-slotname { font-size:clamp(1.3rem,4.5vw,1.8rem); font-weight:900; color:#fff; min-height:1.3em; }
   .tour-slotname.land { color:var(--gold); animation:landpop .4s; }
   @keyframes landpop { from { transform:scale(1.35); } to { transform:none; } }
-  .tour-slotres { position:absolute; left:0; right:0; bottom:14px; display:flex; align-items:center; justify-content:center; gap:12px; font-weight:800; font-size:1.3rem; animation:ttpop .4s both; }
-  .tour-slotava { width:64px; height:64px; } .tour-slotava svg { width:100%; height:100%; }
+  .tour-slotres { position:absolute; left:0; right:0; top:38%; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; font-size:1rem; animation:ttpop .4s both; }
+  .tour-slotava { width:40px; height:40px; } .tour-slotava svg { width:100%; height:100%; }
   .tour-card { position:absolute; left:50%; top:50%; width:130px; aspect-ratio:2/3; margin:-97px 0 0 -65px; }
   .tour-card svg { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 18px #000a); }
   .tour-badges { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 8px 18px; }
@@ -144,6 +144,11 @@
   .tour-flag { position:absolute; right:128px; top:30%; font-weight:900; color:var(--gold); opacity:0; transition:opacity .3s; text-shadow:0 2px 6px #000; }
   .callout { padding:10px 18px; border-radius:12px; background:#3a3012; border:2px solid var(--gold); color:#fff; font-weight:800; font-size:clamp(1.05rem,2.4vw,1.5rem); animation:calloutpulse 1.4s ease-in-out infinite; }
   @keyframes calloutpulse { 0%,100% { box-shadow:0 0 0 0 #ffd23f00; transform:scale(1); } 50% { box-shadow:0 0 22px 2px #ffd23f88; transform:scale(1.02); } }
+  .tour-shuf { position:absolute; left:0; right:0; bottom:8px; display:flex; justify-content:center; gap:8px; padding:0 6px; }
+  .tsh { width:64px; text-align:center; font-size:.66rem; color:var(--muted); }
+  .tsh > svg { width:32px; height:32px; display:block; margin:0 auto; }
+  .sdeck { position:relative; width:30px; height:44px; margin:4px auto 6px; }
+  .sc { position:absolute; inset:0; border:2px solid #fff; border-radius:6px; display:grid; place-items:center; font:900 14px system-ui; color:#fff; text-shadow:0 1px 0 #0006; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -230,6 +235,8 @@
   const teamNo = (n) => (n === 0 ? 10 : n); // number 0 = team 10
   // A box holds only one 0 card, so the ban card plays the 0 (Team 10). Show it wherever a 0 would appear.
   const numText = (n) => (n === 0 ? '🚫 ban card' : String(n));
+  const SHUFFLE_HTML = '<div class="big">🔀 Shuffle your cards!</div><div class="sub">All teams: shuffle your cards now. When the card appears, find the matching cards and run to the receiver!</div>';
+  const SHUFFLE_CALLOUT = '🔀 All teams: shuffle your cards now!';
   let teamNames = [];
   fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; if (typeof renderAll === 'function') renderAll(); }).catch(() => {});
 
@@ -317,8 +324,7 @@
     const info = $('info'); info.replaceChildren();
     if (!c) {
       const cur = S.current;
-      if (cur && cur.person) info.innerHTML = '<div class="big">🃏 Arrange your cards!</div><div class="sub">All teams: sort your cards by <b>colour</b> and <b>number</b>. When everyone is ready, press <b>Conjure card</b>.</div>';
-      else if (cur) info.innerHTML = '<div class="big">Picking…</div>';
+      if (cur) info.innerHTML = SHUFFLE_HTML;   // from the moment the receiver starts being picked
       else info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first person.</div>';
       return;
     }
@@ -456,10 +462,10 @@
     };
     // Stage 1: pick the receiver. Stage 2: the fairy conjures the card.
     if (!c.card) {
-      if (spinText != null) { add('div', 'spin', spinText); return; }
-      if (!c.person) { add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
+      if (spinText != null) { add('div', 'spin', spinText); add('div', 'callout', SHUFFLE_CALLOUT); return; }
+      if (!c.person) { add('div', 'callout', SHUFFLE_CALLOUT); add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
       showPerson();
-      add('div', 'callout', '🃏 All teams: arrange your cards by colour and number now!');
+      add('div', 'callout', SHUFFLE_CALLOUT);
       const r = add('div', 'row');
       add('button', null, '🎲 Pick again', r).onclick = pickPerson;
       add('button', 'primary', '🧚 Conjure card', r).onclick = conjureCard;
@@ -889,10 +895,32 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
     ], { duration: 5200, iterations: Infinity, easing: 'ease-in-out' });
     trailOf(st, f);
   }
+  function shuffleDeck(host, delay, seed = 0) {   // a little pile of cards being shuffled (riffled) over and over
+    const deck = mk('div', 'sdeck'); host.append(deck);
+    const cols = ['red', 'blue', 'green', 'yellow', 'red', 'green', 'blue'];
+    cols.forEach((_, i) => {
+      const c = cols[(i + seed) % cols.length];
+      const k = mk('div', 'sc', String(1 + ((i * 3 + seed * 2) % 9))); k.style.background = COLORS[c].hex; k.style.zIndex = i; deck.append(k);
+      const dir = i % 2 ? 1 : -1;
+      tourAnim(k, [
+        { transform: 'translate(0, 0) rotate(0deg)', offset: 0 },
+        { transform: `translate(${dir * 24}px, ${-6 - i * 2}px) rotate(${dir * 14}deg)`, offset: 0.35 },
+        { transform: `translate(${dir * 7}px, -3px) rotate(${-dir * 5}deg)`, offset: 0.7 },
+        { transform: 'translate(0, 0) rotate(0deg)', offset: 1 },
+      ], { duration: 1200, delay: delay + i * 70, iterations: Infinity, easing: 'ease-in-out' });
+    });
+  }
   function scenePick(st) {
     const names = [...RECEIVERS];
     const nm = mk('div', 'tour-slotname', '…'), box = mk('div', 'tour-slot'), res = mk('div', 'tour-slotres');
     box.append(nm); st.append(box, res);
+    // every team shuffles its own cards while the receiver is being picked
+    const row = mk('div', 'tour-shuf');
+    [1, 3, 5, 7, 0].forEach((n, i) => {
+      const t = mk('div', 'tsh', (window.TEAM_AVATARS || {})[n] || ''); shuffleDeck(t, i * 180, i + 1);
+      t.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(t);
+    });
+    st.append(row);
     const cycle = () => {
       res.replaceChildren(); nm.classList.remove('land');
       const iv = setInterval(() => { nm.textContent = pick(names); }, 80); tourClean.push(() => clearInterval(iv));
@@ -994,7 +1022,7 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
   }
   const TOUR = [
     { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: '10 teams, 40 number cards each. Be the first team to get rid of every card!' },
-    { title: '1 · Pick the receiver', scene: scenePick, text: 'One of the organisers is picked at random as the receiver: teams will bring their cards to them. While you wait, every team arranges its cards by colour and number!' },
+    { title: '1 · Pick the receiver & shuffle', scene: scenePick, text: 'One of the organisers is picked at random as the receiver. While the names spin, every team SHUFFLES its cards! Then the card appears and teams race to the receiver.' },
     { title: '2 · The fairy conjures a card', scene: sceneConjure, text: 'The fairy creates a card. Watch the little badge in the corner of the card!' },
     { title: '3 · Read the corner badge', scene: sceneBadge, text: 'Colour: every card of that colour. Number: every card with that number. Colour + number: only that exact card. The big colour and number on the face do not count! The 0 is played with the ban card 🚫.' },
     { title: '4 · Race to the receiver', scene: sceneRace, text: 'Every team holding matching cards runs to the receiver. The first team to arrive wins the round!' },
