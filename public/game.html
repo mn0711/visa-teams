@@ -13,79 +13,93 @@
   .top h1 { margin:0 auto 0 0; font-size:1.2rem; }
   .top .round { color:var(--gold); font-weight:700; }
   button, a.btn, select { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--panel); color:inherit; cursor:pointer; text-decoration:none; }
+  button.primary { background:var(--gold); color:#111; border:0; font-weight:800; }
+  button:disabled { opacity:.45; cursor:not-allowed; }
   label { color:var(--muted); font-size:.9rem; display:flex; align-items:center; gap:6px; }
-  .stage { flex:1; width:100%; max-width:1100px; display:flex; flex-wrap:wrap; gap:24px; align-items:center; justify-content:center; }
-  #cardWrap { position:relative; height:min(66vh, 560px); aspect-ratio:2/3; perspective:1100px; isolation:isolate; }
-  #card { width:100%; height:100%; filter:drop-shadow(0 18px 30px #000a); }
+  input[type=number] { font:inherit; padding:6px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; text-align:center; width:80px; }
+  .logo { display:inline-block; width:1.5em; height:1.5em; vertical-align:-.35em; }
+  .logo svg { width:100%; height:100%; }
+
+  /* cards area */
+  .stage { width:100%; max-width:1100px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  #cardWrap { position:relative; width:100%; min-height:min(46vh,400px); perspective:1100px; isolation:isolate; }
+  #card { display:flex; gap:clamp(8px,2vw,22px); justify-content:center; align-items:center; width:100%; min-height:min(46vh,400px); }
+  .pc { height:min(46vh,400px,calc((100vw - 48px) / 3 * 1.5)); aspect-ratio:2/3; filter:drop-shadow(0 14px 22px #000a); }
+  .pc svg { width:100%; height:100%; display:block; }
   #fx { position:absolute; inset:0; pointer-events:none; z-index:5; overflow:visible; }
   .fairy { position:absolute; left:0; top:0; width:clamp(72px,12vh,112px); aspect-ratio:1; filter:drop-shadow(0 0 12px #ffd23fcc) drop-shadow(0 0 22px #ff8fc799); will-change:transform; }
   .fairy svg { width:100%; height:100%; overflow:visible; }
-  .fairy .wing { transform-box:fill-box; transform-origin:70% 50%; animation:flap .16s ease-in-out infinite alternate; }
-  .fairy .wing.r { transform-origin:30% 50%; }
+  .wing { transform-box:fill-box; transform-origin:70% 50%; animation:flap .16s ease-in-out infinite alternate; }
+  .wing.r { transform-origin:30% 50%; }
   @keyframes flap { from { transform:scaleX(1) rotate(0); } to { transform:scaleX(.55) rotate(-8deg); } }
   .spark { position:absolute; pointer-events:none; line-height:1; text-shadow:0 0 8px currentColor; will-change:transform,opacity; }
-  .ring { position:absolute; left:50%; top:50%; width:60%; aspect-ratio:1; border-radius:50%; border:4px solid #ffd23f; box-shadow:0 0 30px #ffd23f, inset 0 0 30px #ffd23f66; }
-  .rays { position:absolute; left:50%; top:50%; width:280%; aspect-ratio:1; z-index:-1; pointer-events:none; border-radius:50%;
-          background:repeating-conic-gradient(from 0deg, #ffd23f77 0 7deg, transparent 7deg 22deg);
-          -webkit-mask-image:radial-gradient(circle, #000 8%, transparent 60%); mask-image:radial-gradient(circle, #000 8%, transparent 60%); }
-  #screenfx { position:fixed; inset:0; z-index:40; pointer-events:none; overflow:hidden; }
-  #screenfx .flash { position:absolute; inset:0; background:radial-gradient(circle at 50% 50%, #fff 0, #ffd23faa 35%, transparent 72%); }
-  #screenfx .banner { position:absolute; left:50%; top:9%; transform:translateX(-50%); text-align:center; white-space:nowrap; font-weight:900; color:#ffd23f;
-                      font-size:clamp(1.8rem,6vw,4rem); letter-spacing:.06em; text-shadow:0 0 18px #ffd23f, 0 4px 0 #8a6200, 0 0 40px #ff8fc7; }
-  #screenfx .banner small { display:block; font-size:.42em; color:#fff; letter-spacing:.02em; text-shadow:0 2px 6px #000; }
-  #screenfx .star { position:absolute; top:0; line-height:1; text-shadow:0 0 8px currentColor; }
-  .logo { display:inline-block; width:1.5em; height:1.5em; vertical-align:-.35em; }
-  .logo svg { width:100%; height:100%; }
-  #card svg { width:100%; height:100%; display:block; }
-  .info { flex:1; min-width:260px; max-width:440px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:20px; text-align:center; }
-  .info .big { font-size:clamp(1.6rem,3.6vw,2.6rem); font-weight:800; line-height:1.15; margin:4px 0 8px; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
+  .bigdeck { position:relative; width:min(46vh,400px,60vw); aspect-ratio:2/3; margin:0 auto; }
+  .bk { position:absolute; left:18%; top:12%; width:64%; aspect-ratio:2/3; }
+  .bk svg { width:100%; height:100%; display:block; filter:drop-shadow(0 8px 14px #000a); }
+
+  .info { width:100%; max-width:720px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 20px; text-align:center; }
+  .info .big { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; line-height:1.15; margin:4px 0 8px; display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
   .info .sub { color:var(--muted); }
-  .info .hint { color:var(--muted); font-size:.85rem; margin-top:12px; }
-  .dot { width:.8em; height:.8em; border-radius:50%; display:inline-block; border:3px solid #fff; }
-  .special { color:var(--gold); }
-  .ava { width:130px; height:130px; margin:6px auto; }
-  .ava svg { width:100%; height:100%; }
-  .draw { font-size:1.4rem; font-weight:800; padding:16px 40px; background:var(--gold); color:#111; border:0; box-shadow:0 6px 0 #b8901a; }
-  .draw:active { transform:translateY(3px); box-shadow:0 3px 0 #b8901a; }
-  .hist { width:100%; max-width:1100px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; min-height:70px; }
-  .hist svg { width:44px; height:66px; }
-  .teams { width:100%; max-width:1100px; display:grid; grid-template-columns:repeat(10,1fr); gap:6px; }
-  @media (max-width:800px) { .teams { grid-template-columns:repeat(5,1fr); } }
-  .chip { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 4px 8px; text-align:center; font-size:.75rem; color:var(--muted); position:relative; overflow:hidden; }
-  .chip b { display:block; color:var(--text); font-size:1.5rem; line-height:1.1; }
-  .chip svg { width:34px; height:34px; display:block; margin:0 auto 2px; }
-  .chip i { display:block; height:5px; border-radius:3px; margin-top:4px; background:#3f9d3a; transition:width .4s; }
-  .chip.low i { background:#f5a31a; } .chip.crit i { background:#e0262c; }
-  .chip.hit { outline:3px solid var(--gold); background:#3a3012; color:var(--text); transform:scale(1.06); }
-  .chip.won { outline:3px solid var(--gold); background:#4a3a08; }
+  .chiplist { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin:6px 0 10px; }
+  .cc { display:inline-flex; align-items:center; gap:8px; background:#0d1019; border:1px solid var(--line); border-radius:999px; padding:4px 14px 4px 6px; font-weight:800; font-size:clamp(1rem,2.4vw,1.5rem); }
+  .dot { width:1.1em; height:1.1em; border-radius:50%; display:inline-block; border:3px solid #fff; }
+  .shufteams { display:grid; grid-template-columns:repeat(5,1fr); gap:10px 4px; margin:10px 0 12px; }
+  .tsh { text-align:center; font-size:.66rem; color:var(--muted); }
+  .tsh > svg { width:30px; height:30px; display:block; margin:0 auto; }
+  .sdeck { position:relative; width:26px; height:38px; margin:4px auto 6px; }
+  .sc { position:absolute; inset:0; border:2px solid #fff; border-radius:6px; display:grid; place-items:center; font:900 13px system-ui; color:#fff; text-shadow:0 1px 0 #0006; }
+
   .action { width:100%; max-width:1100px; background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:16px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:10px; }
   .action .who { font-size:clamp(1.3rem,3vw,2rem); font-weight:800; }
-  .action .person { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; }
-  .action .person .pava { width:84px; height:84px; } .action .person .pava svg { width:100%; height:100%; }
-  .action .pname { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; color:var(--gold); }
-  .action .spin { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; color:var(--muted); min-height:1.4em; }
-  .action .row { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
-  .action input[type=number], .top input[type=number] { font:inherit; width:110px; padding:10px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; text-align:center; font-size:1.2rem; }
-  .top input[type=number] { width:70px; padding:6px; font-size:1rem; }
-  button.primary { background:var(--gold); color:#111; border:0; font-weight:800; }
-  .err { color:#ff8a80; min-height:1.2em; }
+  .action .sub { color:var(--muted); }
+  .person { display:flex; align-items:center; gap:14px; flex-wrap:wrap; justify-content:center; }
+  .pava { width:84px; height:84px; } .pava svg { width:100%; height:100%; }
+  .pname { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; color:var(--gold); }
+  .spin { font-size:clamp(1.5rem,3.4vw,2.4rem); font-weight:800; color:var(--muted); min-height:1.4em; }
+  .row { display:flex; gap:8px; align-items:center; justify-content:center; flex-wrap:wrap; }
+  .callout { padding:10px 18px; border-radius:12px; background:#3a3012; border:2px solid var(--gold); color:#fff; font-weight:800; font-size:clamp(1.05rem,2.4vw,1.5rem); animation:calloutpulse 1.4s ease-in-out infinite; }
+  @keyframes calloutpulse { 0%,100% { box-shadow:0 0 0 0 #ffd23f00; transform:scale(1); } 50% { box-shadow:0 0 22px 2px #ffd23f88; transform:scale(1.02); } }
+  .teamsel { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .tsel { width:58px; padding:4px 2px; border-radius:10px; display:grid; justify-items:center; font-size:.8rem; font-weight:800; }
+  .tsel svg { width:34px; height:34px; }
+  .tsel.on { outline:3px solid var(--gold); background:#3a3012; }
+  .draw { font-size:1.4rem; font-weight:800; padding:16px 40px; background:var(--gold); color:#111; border:0; box-shadow:0 6px 0 #b8901a; }
+  .draw:active { transform:translateY(3px); box-shadow:0 3px 0 #b8901a; }
+  .hist { width:100%; max-width:1100px; display:flex; gap:18px; justify-content:center; flex-wrap:wrap; min-height:10px; }
+  .hset { display:flex; gap:4px; opacity:.8; } .hset div { width:34px; } .hset svg { width:100%; display:block; }
+
+  .teams { width:100%; max-width:1100px; display:grid; grid-template-columns:repeat(10,1fr); gap:6px; }
+  @media (max-width:800px) { .teams { grid-template-columns:repeat(5,1fr); } }
+  .chip { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px 4px 8px; text-align:center; font-size:.75rem; color:var(--muted); }
+  .chip b { display:block; color:var(--text); font-size:1.6rem; line-height:1.1; }
+  .chip svg { width:34px; height:34px; display:block; margin:0 auto 2px; }
+  .chip .stars { color:var(--gold); letter-spacing:1px; font-size:.9rem; min-height:1.1em; }
+  .chip i { display:block; height:5px; border-radius:3px; margin-top:4px; background:#3f9d3a; transition:width .4s; }
+  .chip.hit { outline:3px solid var(--gold); background:#3a3012; color:var(--text); transform:scale(1.06); }
+  .chip.won { outline:3px solid var(--gold); background:#4a3a08; }
   .log { width:100%; max-width:1100px; font-size:.9rem; color:var(--muted); display:grid; gap:2px; }
   .pool { width:100%; max-width:1100px; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 14px; }
   .pool summary { cursor:pointer; color:var(--muted); }
-  .pool textarea { width:100%; min-height:90px; margin:8px 0; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; padding:8px; font:inherit; }
+  .bal { display:grid; gap:10px; margin-top:8px; }
+  .balrow { display:flex; flex-wrap:wrap; gap:14px; align-items:center; }
+  .hint2 { color:var(--muted); font-size:.85rem; }
+  #estimate.ok { color:#6fdc7a; } #estimate.warn { color:#f5a31a; }
+  .plist { display:flex; flex-wrap:wrap; gap:6px; }
+  .pp { padding:3px 10px; border-radius:999px; background:#0d1019; border:1px solid var(--line); font-size:.85rem; }
+  .pp.used { opacity:.4; text-decoration:line-through; }
+  .err { color:#ff8a80; min-height:1.2em; }
   #win { position:fixed; inset:0; z-index:50; background:#000c; display:flex; align-items:center; justify-content:center; padding:16px; }
   #win .box { background:var(--panel); border:3px solid var(--gold); border-radius:20px; padding:28px; text-align:center; max-width:520px; }
   #win .box h2 { font-size:clamp(1.6rem,4vw,2.6rem); margin:0 0 6px; color:var(--gold); }
-  #win .ava { width:170px; height:170px; }
-  .bal { display:grid; gap:10px; margin-top:8px; }
-  .balrow { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-  .balrow input[type=number] { width:80px; padding:6px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; text-align:center; }
-  .hint2 { color:var(--muted); font-size:.85rem; }
-  #estimate.ok { color:#6fdc7a; } #estimate.warn { color:#f5a31a; }
-  .pool input[type=text] { font:inherit; padding:8px 10px; border-radius:8px; border:1px solid var(--line); background:#0d1019; color:inherit; margin-top:4px; display:block; }
-  .plist { display:flex; flex-wrap:wrap; gap:6px; }
-  .pp { padding:3px 10px; border-radius:999px; background:#0d1019; border:1px solid var(--line); font-size:.85rem; }
-  .pp.used { opacity:.4; text-decoration:line-through; } .pp.free { border-style:dashed; color:var(--gold); }
+  #win .ava { width:170px; height:170px; margin:0 auto; } #win .ava svg { width:100%; height:100%; }
+  #screenfx { position:fixed; inset:0; z-index:70; pointer-events:none; overflow:hidden; }
+  #screenfx .flash { position:absolute; inset:0; background:radial-gradient(circle at 50% 50%, #fff 0, #ffd23faa 35%, transparent 72%); }
+  #screenfx .banner { position:absolute; left:50%; top:9%; transform:translateX(-50%); text-align:center; white-space:nowrap; font-weight:900; color:#ffd23f;
+                      font-size:clamp(1.6rem,5.4vw,3.6rem); text-shadow:0 0 18px #ffd23f, 0 4px 0 #8a6200, 0 0 40px #ff8fc7; }
+  #screenfx .banner small { display:block; font-size:.42em; color:#fff; text-shadow:0 2px 6px #000; }
+  #screenfx .star { position:absolute; top:0; line-height:1; text-shadow:0 0 8px currentColor; }
+
+  /* guide tour */
   #tour { position:fixed; inset:0; z-index:60; background:#05070dd9; backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:14px; }
   .tour-box { position:relative; width:min(760px,100%); max-height:100%; overflow:auto; background:var(--panel); border:2px solid var(--gold); border-radius:20px; padding:20px 22px 16px; text-align:center; box-shadow:0 20px 60px #000a; }
   .tour-x { position:absolute; top:10px; right:10px; padding:4px 10px; z-index:2; }
@@ -99,7 +113,6 @@
   .tour-bar { height:4px; background:#ffffff1a; border-radius:2px; margin-top:12px; overflow:hidden; }
   .tour-bar i { display:block; height:100%; width:0; background:var(--gold); }
   .tour-fairy { width:86px; }
-  .tour-fairy .wing, .fairy .wing { animation:flap .16s ease-in-out infinite alternate; }
   .tour-teams { position:absolute; left:0; right:0; bottom:22px; display:flex; gap:6px; justify-content:center; flex-wrap:wrap; }
   .tt { width:54px; text-align:center; font-size:.7rem; color:var(--muted); animation:ttpop .5s both; }
   .tt svg { width:48px; height:48px; display:block; margin:0 auto; }
@@ -110,52 +123,23 @@
   @keyframes landpop { from { transform:scale(1.35); } to { transform:none; } }
   .tour-slotres { position:absolute; left:0; right:0; top:38%; display:flex; align-items:center; justify-content:center; gap:10px; font-weight:800; font-size:1rem; animation:ttpop .4s both; }
   .tour-slotava { width:40px; height:40px; } .tour-slotava svg { width:100%; height:100%; }
-  .tour-card { position:absolute; left:50%; top:50%; width:130px; aspect-ratio:2/3; margin:-97px 0 0 -65px; }
-  .tour-card svg { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 18px #000a); }
-  .tour-badges { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:8px; padding:0 8px 18px; }
-  .tb { opacity:.5; transform:scale(.9); transition:.35s; text-align:center; width:31%; max-width:150px; }
-  .tb.on { opacity:1; transform:scale(1.06); }
-  .tb-card { position:relative; width:min(104px, 88%); aspect-ratio:2/3; margin:0 auto 6px; }
-  .tb-card svg { width:100%; height:100%; display:block; filter:drop-shadow(0 8px 14px #000a); }
-  .tb-ring { position:absolute; left:67%; top:5%; width:26%; aspect-ratio:1; border-radius:50%; border:3px solid #ffd23f; box-shadow:0 0 14px #ffd23f; opacity:0; }
-  .tb.on .tb-ring { opacity:1; animation:ringpulse 1s ease-in-out infinite; }
-  @keyframes ringpulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.35); } }
-  .tb-cap { font-size:clamp(.68rem,2.2vw,.85rem); font-weight:700; line-height:1.2; }
-  .tour-dhead { position:absolute; top:14px; left:0; right:0; font-weight:900; font-size:1.3rem; color:#fff; }
-  .dotg { width:.9em; height:.9em; display:inline-block; border-radius:50%; background:#3f9d3a; border:3px solid #fff; vertical-align:-.1em; }
-  .tour-hand { position:absolute; left:0; right:0; top:70px; display:flex; gap:7px; justify-content:center; flex-wrap:wrap; padding:0 8px; }
-  .hc { width:42px; height:62px; border-radius:8px; border:3px solid #fff; display:grid; place-items:center; font:900 22px system-ui; color:#fff; text-shadow:0 2px 0 #0006; transition:transform .5s, opacity .5s; }
-  .hc.gone { transform:translateY(-70px) rotate(20deg) scale(.6); opacity:0; }
-  .tour-count { position:absolute; left:0; right:0; bottom:14px; font-size:1.4rem; font-weight:900; color:var(--gold); }
-  .tour-rays { position:absolute; left:50%; top:50%; width:520px; aspect-ratio:1; border-radius:50%; background:repeating-conic-gradient(from 0deg, #ffd23f66 0 7deg, transparent 7deg 22deg);
-               -webkit-mask-image:radial-gradient(circle, #000 8%, transparent 62%); mask-image:radial-gradient(circle, #000 8%, transparent 62%); }
-  .tour-chip { position:absolute; left:50%; bottom:8px; transform:translateX(-50%); display:flex; align-items:center; gap:8px; background:#0a0d18cc; border:2px solid var(--gold); border-radius:999px; padding:3px 14px 3px 5px; font-weight:700; white-space:nowrap; font-size:.9rem; }
-  .tca { width:32px; height:32px; } .tca svg { width:100%; height:100%; }
-  .tour-trophy { position:absolute; left:50%; top:50%; width:150px; margin:-78px 0 0 -75px; font-size:110px; line-height:1; filter:drop-shadow(0 0 24px #ffd23f); }
-  .teamsel { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
-  .tsel { width:58px; padding:4px 2px; border-radius:10px; display:grid; justify-items:center; font-size:.8rem; font-weight:800; }
-  .tsel svg { width:34px; height:34px; }
-  .tsel.on { outline:3px solid var(--gold); background:#3a3012; }
+  .tour-shuf { position:absolute; left:0; right:0; bottom:8px; display:flex; justify-content:center; gap:8px; padding:0 6px; }
+  .tour-shuf .tsh { width:64px; }
+  .tour-trio { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:14px; }
+  .tt3 { width:92px; aspect-ratio:2/3; } .tt3 svg { width:100%; height:100%; display:block; filter:drop-shadow(0 10px 18px #000a); }
   .tour-run { position:absolute; left:10px; width:56px; text-align:center; font-size:.7rem; color:var(--muted); }
   .tour-run svg { width:46px; height:46px; display:block; margin:0 auto; }
   .tour-run.win { color:var(--gold); filter:drop-shadow(0 0 10px #ffd23f); }
   .tour-recv { position:absolute; right:14px; top:50%; margin-top:-66px; width:110px; text-align:center; font-weight:800; }
   .tour-recv svg { width:90px; height:90px; display:block; margin:0 auto 2px; overflow:visible; }
   .tour-flag { position:absolute; right:128px; top:30%; font-weight:900; color:var(--gold); opacity:0; transition:opacity .3s; text-shadow:0 2px 6px #000; }
-  .callout { padding:10px 18px; border-radius:12px; background:#3a3012; border:2px solid var(--gold); color:#fff; font-weight:800; font-size:clamp(1.05rem,2.4vw,1.5rem); animation:calloutpulse 1.4s ease-in-out infinite; }
-  @keyframes calloutpulse { 0%,100% { box-shadow:0 0 0 0 #ffd23f00; transform:scale(1); } 50% { box-shadow:0 0 22px 2px #ffd23f88; transform:scale(1.02); } }
-  .tour-shuf { position:absolute; left:0; right:0; bottom:8px; display:flex; justify-content:center; gap:8px; padding:0 6px; }
-  .tsh { width:64px; text-align:center; font-size:.66rem; color:var(--muted); }
-  .tsh > svg { width:32px; height:32px; display:block; margin:0 auto; }
-  .sdeck { position:relative; width:30px; height:44px; margin:4px auto 6px; }
-  .sc { position:absolute; inset:0; border:2px solid #fff; border-radius:6px; display:grid; place-items:center; font:900 14px system-ui; color:#fff; text-shadow:0 1px 0 #0006; }
-  .shufteams { display:grid; grid-template-columns:repeat(5,1fr); gap:10px 4px; margin:10px 0 12px; }
-  .shufteams .tsh { width:auto; font-size:.66rem; }
-  .shufteams .tsh > svg { width:30px; height:30px; }
-  .shufteams .sdeck { width:26px; height:38px; margin:4px auto 6px; }
-  .bigdeck { position:relative; width:100%; height:100%; }
-  .bk { position:absolute; left:18%; top:12%; width:64%; aspect-ratio:2/3; }
-  .bk svg { width:100%; height:100%; display:block; filter:drop-shadow(0 8px 14px #000a); }
+  .tour-back { position:absolute; left:0; right:0; bottom:10px; display:flex; justify-content:center; gap:14px; }
+  .tour-back .tt { animation:none; }
+  .mc { position:absolute; left:0; top:0; width:26px; aspect-ratio:2/3; } .mc svg { width:100%; height:100%; display:block; }
+  .tour-stars { position:absolute; left:0; right:0; top:128px; font-size:2.2rem; letter-spacing:10px; color:#ffffff44; }
+  .tour-stars b { font-weight:400; transition:color .3s, transform .3s; display:inline-block; } .tour-stars b.on { color:var(--gold); transform:scale(1.25); text-shadow:0 0 14px #ffd23f; }
+  .tour-winava { position:absolute; left:50%; top:52px; width:78px; margin-left:-39px; } .tour-winava svg { width:100%; height:100%; }
+  .tour-trophy { position:absolute; left:50%; top:178px; width:100px; margin-left:-50px; font-size:64px; line-height:1; filter:drop-shadow(0 0 20px #ffd23f); opacity:0; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -164,42 +148,31 @@
   <h1><span class="logo" id="logo"></span> Uno Fairy <span class="round" id="round"></span></h1>
   <button id="helpBtn">❓ How to play</button>
   <button id="fs">⛶ Full screen</button>
-  <label>Cards per team <input id="start" type="number" min="1" max="200" value="40"></label>
-  <button id="undo">&#8630; Undo last</button>
+  <button id="undo">↶ Undo last</button>
   <button id="reset">New game</button>
   <a class="btn" href="/admin">← Admin</a>
 </div>
 
 <div class="stage">
   <div id="cardWrap"><div id="card"></div><div id="fx"></div></div>
-  <div class="info" id="info">
-    <div class="big">Ready?</div>
-    <div class="sub">Press the button (or Space) to pick the first person.</div>
-  </div>
+  <div class="info" id="info"></div>
 </div>
 
 <div class="action hidden" id="action"></div>
-<button class="draw" id="draw">🎲 Pick a person <small>(Space)</small></button>
-<div class="hist" id="hist" aria-label="Previous cards"></div>
+<button class="draw" id="draw"></button>
+<div class="hist" id="hist" aria-label="Previous rounds"></div>
 <div class="teams" id="teams"></div>
 <div class="log" id="log"></div>
-<details class="pool" id="balance">
-  <summary>Game balance: <span id="estimate">estimating...</span></summary>
+
+<details class="pool" id="settings">
+  <summary>Game settings: <span id="estimate">estimating...</span></summary>
   <div class="bal">
-    <div class="balrow"><b>Option mix (weights)</b>
-      <label>Colour <input id="wColor" type="number" min="0" max="100"></label>
-      <label>Number <input id="wNumber" type="number" min="0" max="100"></label>
-      <label>Colour + number <input id="wBoth" type="number" min="0" max="100"></label>
-    </div>
     <div class="balrow">
-      <label>Special card chance <select id="sp"><option value="5">5%</option><option value="8">8%</option><option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="25">25%</option></select></label>
-      <label>Plain card chance <select id="pl"><option value="0">0%</option><option value="5">5%</option><option value="10">10%</option><option value="15">15%</option></select></label>
+      <label>Cards per round <input id="cpr" type="number" min="1" max="5"></label>
+      <label>Rounds to win the game <input id="need" type="number" min="1" max="10"></label>
       <label>Seconds per round <input id="secs" type="number" min="10" max="300"></label>
     </div>
-    <div class="balrow"><b>Presets</b>
-      <button data-p="fast">Faster</button><button data-p="balanced">Balanced</button><button data-p="long">Longer</button>
-    </div>
-    <div class="hint2">Colour options remove the most cards, so the game ends sooner. Number options remove fewer, and "colour + number" (for example GREEN 5) removes about one card, which makes the game longer. The estimate simulates 400 games with random 40-card hands. Changes apply from the next card.</div>
+    <div class="hint2">Each round the fairy conjures this many cards. A team wins the round by reaching the receiver first with all of them. The estimate assumes every team is equally likely to win a round (simulated 500 games).</div>
   </div>
 </details>
 <details class="pool" id="pool">
@@ -211,6 +184,7 @@
     <div class="err" id="poolMsg" style="color:var(--muted)"></div>
   </div>
 </details>
+
 <div id="win" class="hidden"></div>
 <div id="tour" class="hidden" role="dialog" aria-label="How to play Uno Fairy">
   <div class="tour-box">
@@ -231,6 +205,7 @@
 <script src="/avatars.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
+  const mk = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const COLORS = {
     red:    { hex:'#e0262c', name:'RED',    l:'R' },
     yellow: { hex:'#f5cf1a', name:'YELLOW', l:'Y' },
@@ -238,220 +213,147 @@
     blue:   { hex:'#1b6fc4', name:'BLUE',   l:'B' },
   };
   const COLOR_KEYS = Object.keys(COLORS);
-  const PLAIN_CHANCE = 0.10;               // plain number-only cards (no option)
-  const teamNo = (n) => (n === 0 ? 10 : n); // number 0 = team 10
-  // A box holds only one 0 card, so the ban card plays the 0 (Team 10). Show it wherever a 0 would appear.
-  const numText = (n) => (n === 0 ? '🚫 ban card' : String(n));
+  const RECEIVERS = ['GDN', 'NUYY', 'PAMT', 'HUYC'];   // the organisers who receive the cards (fixed in the code)
+  const TEAM_ORDER = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+  const teamNo = (n) => (n === 0 ? 10 : n);   // number 0 = team 10
+  // A box holds only one 0 card, so the ban card plays the 0 (Team 10). Show it wherever a 0 appears.
+  const numText = (n) => (n === 0 ? '🚫' : String(n));
+  const cardText = (c) => `${COLORS[c.color].name} ${numText(c.number)}`;
+  const cardShort = (c) => `${COLORS[c.color].l}${numText(c.number)}`;
   const SHUFFLE_CALLOUT = '🔀 All teams: shuffle your cards now!';
   let teamNames = [];
-  fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; if (typeof renderAll === 'function') renderAll(); }).catch(() => {});
+  fetch('/api/teams').then((r) => r.json()).then((n) => { teamNames = n; if (typeof renderAll === 'function' && ready) renderAll(); }).catch(() => {});
+  const nameOf = (t) => (teamNames[t] ? ` · ${teamNames[t]}` : '');
+  let ready = false;
 
-  // Unbiased random helpers
+  // unbiased random helpers
   function rnd() { const a = new Uint32Array(1); crypto.getRandomValues(a); return a[0] / 2 ** 32; }
   const ri = (n) => Math.floor(rnd() * n);
   const pick = (arr) => arr[ri(arr.length)];
 
-  // ---------- card artwork (Uno look) ----------
+  // ---------- card artwork (Uno look, no corner options: just colour + number) ----------
   function banG(cx, cy, r, fill, outline) {   // the ban symbol: a ring with a diagonal bar
     const t = r * 0.36, o = Math.max(1.2, r * 0.07), d = r * 0.68;
     const ring = (c, w) => `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${c}" stroke-width="${w}"/>`;
     const bar = (c, w) => `<line x1="${cx - d}" y1="${cy - d}" x2="${cx + d}" y2="${cy + d}" stroke="${c}" stroke-width="${w}"/>`;
     return ring(outline, t + 2 * o) + bar(outline, t + 2 * o) + ring(fill, t) + bar(fill, t);
   }
-  function badge(opt) {
-    if (opt.kind === 'color') {
-      const c = COLORS[opt.value];
-      return `<circle r="21" fill="${c.hex}" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/>` +
-        `<text y="8" text-anchor="middle" font-size="22" font-weight="900" fill="#fff" stroke="#111" stroke-width="1.4" paint-order="stroke">${c.l}</text>`;
-    }
-    if (opt.kind === 'both') {
-      const c = COLORS[opt.color];
-      return `<circle r="21" fill="${c.hex}" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/>` +
-        (opt.number === 0 ? banG(0, 1, 12, '#fff', '#111')
-          : `<text y="10" text-anchor="middle" font-size="28" font-weight="900" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${opt.number}</text>`);
-    }
-    return `<circle r="21" fill="#fff" stroke="#111" stroke-width="3"/>` +
-      (opt.value === 0 ? banG(0, 0, 12, '#111', '#fff')
-        : `<text y="9" text-anchor="middle" font-size="26" font-weight="900" fill="#111">${opt.value}</text>`);
-  }
   function cardSvg(c) {
-    const special = c.type === 'special', plain = c.type === 'plain';
-    const face = special ? '#14141a' : plain ? '#6b7280' : COLORS[c.color].hex;
-    const numFill = special ? '#ffd23f' : plain ? '#4b5563' : face;
-    const outline = '#111';
-    const oval = special ? 'url(#rb)' : '#fff';
-    const opt = special ? { kind:'star' } : plain ? null : c.option;
-    const badgeInner = !opt ? '' : opt.kind === 'star'
-      ? `<circle r="21" fill="#ffd23f" stroke="#fff" stroke-width="4"/><circle r="23.5" fill="none" stroke="#111" stroke-width="2"/><text y="9" text-anchor="middle" font-size="26" fill="#111">★</text>`
-      : badge(opt);
-    const badgeG = (rot) => !opt ? '' :
-      `<g transform="${rot ? 'rotate(180 100 150) ' : ''}translate(160 42)">${badgeInner}` +
-      `<text y="38" text-anchor="middle" font-size="9" font-weight="800" fill="#fff" stroke="#111" stroke-width="2" paint-order="stroke">${special ? 'SPECIAL' : 'CHECK'}</text></g>`;
+    const face = COLORS[c.color].hex;
     const font = `font-family="'Arial Black', Impact, system-ui, sans-serif" font-weight="900"`;
     const corner = (rot) => c.number === 0
       ? `<g${rot ? ' transform="rotate(180 100 150)"' : ''}>${banG(35, 30, 11, '#fff', '#111')}</g>`
       : `<text ${font} x="24" y="42" font-size="30" fill="#fff" stroke="#111" stroke-width="1.5" paint-order="stroke"${rot ? ' transform="rotate(180 100 150)"' : ''}>${c.number}</text>`;
-    return `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img">` +
-      `<defs><linearGradient id="rb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e0262c"/><stop offset=".35" stop-color="#f5cf1a"/><stop offset=".7" stop-color="#3f9d3a"/><stop offset="1" stop-color="#1b6fc4"/></linearGradient></defs>` +
+    return `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${cardText(c)}">` +
       `<rect width="200" height="300" rx="18" fill="#fff" stroke="#d6d6d6"/>` +
       `<rect x="10" y="10" width="180" height="280" rx="12" fill="${face}"/>` +
-      `<ellipse cx="100" cy="150" rx="62" ry="108" fill="${oval}" transform="rotate(24 100 150)"/>` +
-      (c.number === 0 ? banG(100, 150, 44, numFill, outline)
-        : `<text ${font} x="100" y="194" text-anchor="middle" font-size="130" fill="${numFill}" stroke="${outline}" stroke-width="9" paint-order="stroke">${c.number}</text>`) +
-      corner(false) + corner(true) + badgeG(false) + badgeG(true) + `</svg>`;
+      `<ellipse cx="100" cy="150" rx="62" ry="108" fill="#fff" transform="rotate(24 100 150)"/>` +
+      (c.number === 0 ? banG(100, 150, 44, face, '#111')
+        : `<text ${font} x="100" y="194" text-anchor="middle" font-size="130" fill="${face}" stroke="#111" stroke-width="9" paint-order="stroke">${c.number}</text>`) +
+      corner(false) + corner(true) + `</svg>`;
   }
+  const cardBackSvg = () => `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6fb5"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#6fd8ff"/></linearGradient></defs>` +
+    `<rect width="200" height="300" rx="18" fill="#fff" stroke="#d6d6d6"/><rect x="10" y="10" width="180" height="280" rx="12" fill="#1b1f3a"/>` +
+    `<ellipse cx="100" cy="150" rx="62" ry="108" fill="url(#bkg)" transform="rotate(24 100 150)"/>` +
+    `<text x="100" y="178" text-anchor="middle" font-size="96" fill="#fff" stroke="#1b1f3a" stroke-width="6" paint-order="stroke">★</text></svg>`;
 
   // ---------- game state (saved in this browser) ----------
-  const KEY = 'unoGame.v1';
-  const RECEIVERS = ['GDN', 'NUYY', 'PAMT', 'HUYC'];   // the organisers who receive the cards (fixed in the code)
-  const SETTINGS = { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5, secs: 30 };
-  const fresh = (start = 40) => ({ start, counts: Array(10).fill(start), picked: [], last: null, log: [], round: 0, history: [], current: null, won: null, ...JSON.parse(JSON.stringify(SETTINGS)) });
+  const KEY = 'unoGame.v2';
+  const fresh = () => ({ need: 3, cpr: 3, secs: 45, wins: new Array(10).fill(0), round: 0, picked: [], last: null, log: [], history: [], current: null, won: null });
   let S = fresh();
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (s && Array.isArray(s.counts) && s.counts.length === 10) S = { ...fresh(), ...s };
+    if (s && Array.isArray(s.wins) && s.wins.length === 10) S = { ...fresh(), ...s };
   } catch {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
   const nkey = (name) => name.normalize('NFC').toLowerCase().replace(/\s+/g, '');
-  const nameOf = (t) => (teamNames[t] ? ` · ${teamNames[t]}` : '');
 
-  function newCard() {
-    const r = rnd(), sp = S.special / 100, pl = S.plain / 100;
-    if (r < sp) return { type:'special', number:ri(10) };
-    if (r < sp + pl) return { type:'plain', number:ri(10) };
-    const m = S.mix, k = rnd() * ((m.color + m.number + m.both) || 1);
-    let option;
-    if (k < m.color) option = { kind:'color', value:pick(COLOR_KEYS) };
-    else if (k < m.color + m.number) option = { kind:'number', value:ri(10) };
-    else option = { kind:'both', color:pick(COLOR_KEYS), number:ri(10) };
-    return { type:'normal', color:pick(COLOR_KEYS), number:ri(10), option };
+  // N distinct cards (colour + number), 0 = ban card
+  function newCards(n) {
+    const all = [];
+    COLOR_KEYS.forEach((color) => { for (let number = 0; number < 10; number++) all.push({ color, number }); });
+    for (let i = all.length - 1; i > 0; i--) { const j = ri(i + 1); [all[i], all[j]] = [all[j], all[i]]; }
+    return all.slice(0, n);
   }
-  function setInfo(c) {
-    const info = $('info');
-    if (!c && S.current && info.querySelector('.shufinfo')) return;   // keep the shuffle animation running
+
+  // ---------- main screen rendering ----------
+  function setInfo() {
+    const info = $('info'), c = S.current;
+    if (c && !c.cards && info.querySelector('.shufinfo')) return;   // keep the shuffle animation running
     info.replaceChildren();
-    if (!c) {
-      const cur = S.current;
-      if (cur) info.append(buildShuffleInfo());   // from the moment the receiver starts being picked
-      else info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first person.</div>';
+    if (!c) { info.innerHTML = '<div class="big">Ready?</div><div class="sub">Press the button (or Space) to pick the first receiver.</div>'; return; }
+    if (!c.cards) { info.append(buildShuffleInfo()); return; }
+    if (c.done) {
+      const e = S.log[0];
+      info.append(mk('div', 'big', e && e.team != null ? `🏆 Team ${teamNo(e.team)} wins the round!` : 'No winner this round'));
+      info.append(mk('div', 'sub', 'All teams take their cards back. Shuffle, then pick the next receiver.'));
       return;
     }
-    const big = document.createElement('div'); big.className = 'big';
-    const sub = document.createElement('div'); sub.className = 'sub';
-    const hint = document.createElement('div'); hint.className = 'hint';
-    if (c.type === 'special') {
-      big.classList.add('special');
-      big.textContent = `★ SPECIAL: Team ${teamNo(c.number)}`;
-      const ava = document.createElement('div'); ava.className = 'ava'; ava.innerHTML = (window.TEAM_AVATARS || {})[c.number] || '';
-      sub.textContent = (teamNames[c.number] ? teamNames[c.number] + ' may' : 'This team may') + ' remove ALL cards of ONE colour of their choice!' + (c.number === 0 ? ' (Team 10 plays the ban card 🚫 as its 0.)' : '');
-      info.append(big, ava, sub);
-      return;
-    }
-    if (c.type === 'plain') {
-      big.textContent = 'Number card only';
-      sub.textContent = 'No option on this card. Nothing happens this round.';
-      info.append(big, sub);
-      return;
-    }
-    if (c.option.kind === 'both') {
-      const col = COLORS[c.option.color];
-      big.append('CHECK');
-      const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, `${col.name} ${numText(c.option.number)}`);
-      sub.textContent = `Only the ${col.name} ${c.option.number === 0 ? 'ban card 🚫 (the 0)' : c.option.number} counts. The first team to reach the receiver wins the round.`;
-    } else if (c.option.kind === 'color') {
-      const col = COLORS[c.option.value];
-      big.append('CHECK COLOUR');
-      const d = document.createElement('span'); d.className = 'dot'; d.style.background = col.hex; big.append(d, col.name);
-      sub.textContent = `Teams holding ${col.name} cards run to the receiver. The first one there discards them all.`;
-    } else {
-      big.textContent = `CHECK NUMBER ${numText(c.option.value)}`;
-      sub.textContent = `Teams holding ${c.option.value === 0 ? 'the ban card 🚫 (their 0)' : 'a ' + c.option.value} run to the receiver. The first one there discards them all.`;
-    }
-    hint.textContent = 'Only the corner badge counts. The card face is ignored.';
-    info.append(big, sub, hint);
+    info.append(mk('div', 'big', `Find these ${c.cards.length} card${c.cards.length > 1 ? 's' : ''}!`));
+    const list = mk('div', 'chiplist');
+    c.cards.forEach((card) => list.append(mk('span', 'cc', `<span class="dot" style="background:${COLORS[card.color].hex}"></span>${COLORS[card.color].name} ${numText(card.number)}`)));
+    info.append(list, mk('div', 'sub', 'Same colour AND number. The first team to reach the receiver with all of them wins the round.'));
   }
   function renderHist() {
-    $('hist').replaceChildren(...S.history.slice(0, 10).map((c) => {
-      const d = document.createElement('div'); d.innerHTML = cardSvg(c); return d;
+    $('hist').replaceChildren(...S.history.slice(0, 3).map((set) => {
+      const g = mk('div', 'hset'); set.forEach((c) => g.append(mk('div', null, cardSvg(c)))); return g;
     }));
   }
-  const currentTeam = () => {
-    const c = S.current;
-    if (!c || !c.pending) return null;
-    if (c.card && c.card.type === 'special') return c.card.number;
-    return c.team != null ? c.team : null;   // normal card: the team the host selected
-  };
+  const currentTeam = () => (S.current && !S.current.done && S.current.team != null ? S.current.team : null);
   function buildChips() {
     const cur = currentTeam();
-    $('teams').replaceChildren(...[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => {
-      const cnt = S.counts[n], ratio = cnt / S.start;
-      const d = document.createElement('div');
-      d.className = 'chip' + (cur === n ? ' hit' : '') + (S.won === n ? ' won' : '') + (ratio <= 0.25 ? ' crit' : ratio <= 0.5 ? ' low' : '');
+    $('teams').replaceChildren(...TEAM_ORDER.map((n) => {
+      const w = S.wins[n], d = mk('div', 'chip' + (cur === n ? ' hit' : '') + (S.won === n ? ' won' : ''));
       d.innerHTML = (window.TEAM_AVATARS || {})[n] || '';
-      const t = document.createElement('span'); t.textContent = `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`;
-      const b = document.createElement('b'); b.textContent = cnt;
-      const bar = document.createElement('i'); bar.style.width = `${Math.max(0, Math.round(ratio * 100))}%`;
-      d.append(t, b, bar); d.title = teamNames[n] || ''; return d;
+      d.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`), mk('b', null, String(w)));
+      d.append(mk('div', 'stars', S.need <= 6 ? `${'★'.repeat(Math.min(w, S.need))}<span style="color:#ffffff55">${'☆'.repeat(Math.max(0, S.need - w))}</span>` : `${w}/${S.need}`));
+      const bar = mk('i'); bar.style.width = `${Math.min(100, Math.round(w / S.need * 100))}%`; d.append(bar);
+      d.title = teamNames[n] || ''; return d;
     }));
   }
   function renderLog() {
-    $('log').replaceChildren(...S.log.slice(0, 8).map((e) => {
-      const d = document.createElement('div');
-      d.textContent = `R${e.round} · Team ${teamNo(e.team)}${e.special ? ' (special)' : ''} · −${e.removed} → ${e.left} left${e.person ? ' · receiver ' + e.person : ''}`;
-      return d;
-    }));
+    $('log').replaceChildren(...S.log.slice(0, 8).map((e) => mk('div', null,
+      `R${e.round} · ${e.team == null ? 'no winner' : `Team ${teamNo(e.team)} wins (${e.wins}/${S.need})`} · receiver ${e.person} · ${e.cards.map(cardShort).join(' ')}`)));
   }
   function renderWin() {
     const w = $('win');
     if (S.won == null) { w.classList.add('hidden'); w.replaceChildren(); return; }
     w.classList.remove('hidden');
-    const box = document.createElement('div'); box.className = 'box';
-    const h = document.createElement('h2'); h.textContent = `🏆 Team ${teamNo(S.won)}${nameOf(S.won)} wins!`;
-    const ava = document.createElement('div'); ava.className = 'ava'; ava.style.margin = '0 auto'; ava.innerHTML = (window.TEAM_AVATARS || {})[S.won] || '';
-    const p = document.createElement('p'); p.textContent = 'All their cards are gone.'; p.style.color = 'var(--muted)';
-    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:center';
-    const u = document.createElement('button'); u.textContent = '↶ Undo last round'; u.onclick = undo;
-    const n = document.createElement('button'); n.className = 'primary'; n.textContent = 'New game'; n.onclick = newGame;
-    row.append(u, n); box.append(h, ava, p, row); w.replaceChildren(box);
+    const box = mk('div', 'box');
+    box.append(mk('h2', null, `🏆 Team ${teamNo(S.won)}${nameOf(S.won)} wins the game!`));
+    box.append(mk('div', 'ava', (window.TEAM_AVATARS || {})[S.won] || ''));
+    const p = mk('p', null, `${S.wins[S.won]} round${S.wins[S.won] > 1 ? 's' : ''} won.`); p.style.color = 'var(--muted)'; box.append(p);
+    const row = mk('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:center';
+    const u = mk('button', null, '↶ Undo last round'); u.onclick = undo;
+    const n = mk('button', 'primary', 'New game'); n.onclick = newGame;
+    row.append(u, n); box.append(row); w.replaceChildren(box);
   }
 
-  // ---------- pick pool ----------
+  // ---------- receivers ----------
   let spinText = null, picking = false;
-  function renderPoolList(all) {
-    $('poolList').replaceChildren(...all.map((p) => {
-      const s = document.createElement('span');
-      s.className = 'pp' + (S.picked.includes(nkey(p.name)) ? ' used' : '');
-      s.textContent = p.name;
-      return s;
-    }));
+  function renderPoolList() {
+    $('poolList').replaceChildren(...RECEIVERS.map((name) => mk('span', 'pp' + (S.picked.includes(nkey(name)) ? ' used' : ''), name)));
+    $('poolInfo').textContent = `${RECEIVERS.join(' · ')} · ${RECEIVERS.filter((n) => !S.picked.includes(nkey(n))).length} not picked yet`;
   }
-  async function loadPool() {   // the receivers never change during a game
-    const all = RECEIVERS.map((name) => ({ name }));
-    const avail = all.filter((p) => !S.picked.includes(nkey(p.name)));
-    $('poolInfo').textContent = `${RECEIVERS.join(' · ')} · ${avail.length} not picked yet`;
-    renderPoolList(all);
-    return { all, avail };
-  }
-  async function pickPerson() {
-    if (picking || !S.current || !S.current.pending) return;
+  function pickPerson() {
+    if (picking || !S.current || S.current.cards) return;
     picking = true;
-    let { all, avail } = await loadPool();
-    if (!all.length) { picking = false; alert('There are no receivers configured.'); return; }
-    if (!avail.length) { S.picked = []; avail = all; $('poolMsg').textContent = 'Everyone has been picked once, starting a new cycle.'; }
+    let avail = RECEIVERS.filter((n) => !S.picked.includes(nkey(n)));
+    if (!avail.length) { S.picked = []; avail = RECEIVERS.slice(); $('poolMsg').textContent = 'Everyone has been picked once, starting a new cycle.'; }
     // never the same receiver twice in a row (also covers "Pick again")
     const exclude = [S.current.person && nkey(S.current.person.name), S.last].filter(Boolean);
-    let choices = avail.filter((p) => !exclude.includes(nkey(p.name)));
+    let choices = avail.filter((n) => !exclude.includes(nkey(n)));
     if (!choices.length) choices = avail;
-    const chosen = pick(choices);
-    const t0 = Date.now();
+    const chosen = pick(choices), t0 = Date.now();
     const timer = setInterval(() => {
       if (Date.now() - t0 > 1200) {
         clearInterval(timer); spinText = null; picking = false;
-        S.current.person = chosen; S.last = nkey(chosen.name); save(); renderAll();
+        S.current.person = { name: chosen }; S.last = nkey(chosen); save(); renderAll();
         return;
       }
-      spinText = pick(all).name; renderAction();
+      spinText = pick(RECEIVERS); renderAction();
     }, 70);
+    renderAll();
   }
 
   // ---------- round actions ----------
@@ -460,229 +362,135 @@
     const c = S.current;
     if (!c) { box.classList.add('hidden'); return; }
     box.classList.remove('hidden');
-    const add = (tag, cls, text, parent = box) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; parent.appendChild(e); return e; };
-    const showPerson = () => {   // the picked person only RECEIVES the cards, no team involved
+    const add = (tag, cls, text, parent = box) => { const e = mk(tag, cls); if (text != null) e.textContent = text; parent.appendChild(e); return e; };
+    const showPerson = () => {   // the receiver: teams bring their cards to this person
       const row = add('div', 'person');
       const ava = add('div', 'pava', null, row); ava.innerHTML = FAIRY_SVG;
       const txt = add('div', null, null, row);
       add('div', 'pname', c.person.name, txt);
       add('div', 'sub', '📥 Receiver: teams bring their cards to this person', txt);
     };
-    // Stage 1: pick the receiver. Stage 2: the fairy conjures the card.
-    if (!c.card) {
+    // Stage 1: pick the receiver (teams shuffle). Stage 2: the fairy conjures the cards.
+    if (!c.cards) {
       if (spinText != null) { add('div', 'spin', spinText); add('div', 'callout', SHUFFLE_CALLOUT); return; }
-      if (!c.person) { add('div', 'callout', SHUFFLE_CALLOUT); add('button', 'primary', '🎲 Pick a person').onclick = pickPerson; return; }
+      if (!c.person) { add('div', 'callout', SHUFFLE_CALLOUT); add('button', 'primary', '🎲 Pick the receiver').onclick = pickPerson; return; }
       showPerson();
       add('div', 'callout', SHUFFLE_CALLOUT);
       const r = add('div', 'row');
       add('button', null, '🎲 Pick again', r).onclick = pickPerson;
-      add('button', 'primary', '🧚 Conjure card', r).onclick = conjureCard;
+      add('button', 'primary', `🧚 Conjure ${S.cpr} card${S.cpr > 1 ? 's' : ''}`, r).onclick = conjureCards;
       return;
     }
-    if (c.card.type === 'plain') {
-      if (c.person) showPerson();
-      add('div', 'sub', 'Number card only: no option this round, nothing to record.');
+    if (c.done) {
+      add('div', 'sub', '✓ Round recorded. All teams take their cards back, shuffle, and the next round begins.');
       return;
     }
-    if (!c.pending) { add('div', 'sub', '✓ Round recorded. Pick the next receiver.'); return; }
-    if (c.person) showPerson();
-    let team;
-    if (c.card.type === 'special') {
-      team = c.card.number;
-      add('div', 'who', `★ Special: Team ${teamNo(team)}${team === 0 ? ' 🚫' : ''}${nameOf(team)}`);
-    } else {
-      add('div', 'sub', 'Which team reached the receiver first?');
-      const sel = add('div', 'teamsel');
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n) => {
-        const b = add('button', 'tsel' + (c.team === n ? ' on' : ''), null, sel);
-        b.innerHTML = `${(window.TEAM_AVATARS || {})[n] || ''}<span>${teamNo(n)}${n === 0 ? '🚫' : ''}</span>`;
-        b.title = `Team ${teamNo(n)}${nameOf(n)}`;
-        b.onclick = () => { c.team = n; save(); renderAction(); buildChips(); };
-      });
-      if (c.team == null) { add('div', 'sub', 'Choose the team above, then enter how many cards it handed over.'); return; }
-      team = c.team;
-      add('div', 'who', `Team ${teamNo(team)}${nameOf(team)} wins the round`);
-    }
-    const left = S.counts[team];
-    const r = add('div', 'row');
-    add('span', 'sub', `Cards removed by Team ${teamNo(team)} (has ${left}):`, r);
-    const inp = add('input', null, null, r);
-    inp.type = 'number'; inp.id = 'removed'; inp.min = 0; inp.max = left; inp.inputMode = 'numeric'; inp.placeholder = '0';
-    inp.onkeydown = (e) => { if (e.key === 'Enter') confirmRound(); };
-    add('button', 'primary', 'Confirm', r).onclick = confirmRound;
-    add('div', 'err').id = 'err';
-    setTimeout(() => inp.focus({ preventScroll: true }), 0);
+    showPerson();
+    add('div', 'sub', 'Which team reached the receiver first with all the cards?');
+    const sel = add('div', 'teamsel');
+    TEAM_ORDER.forEach((n) => {
+      const b = add('button', 'tsel' + (c.team === n ? ' on' : ''), null, sel);
+      b.innerHTML = `${(window.TEAM_AVATARS || {})[n] || ''}<span>${teamNo(n)}${n === 0 ? '🚫' : ''}</span>`;
+      b.title = `Team ${teamNo(n)}${nameOf(n)}`;
+      b.onclick = () => { c.team = n; save(); renderAction(); buildChips(); };
+    });
+    if (c.team != null) add('div', 'who', `Team ${teamNo(c.team)}${nameOf(c.team)} wins the round`);
+    const row = add('div', 'row');
+    const ok = add('button', 'primary', 'Confirm winner', row);
+    ok.disabled = c.team == null; ok.onclick = () => recordRound(c.team);
+    add('button', null, 'No winner', row).onclick = () => { if (confirm('No team had all the cards? The round is skipped.')) recordRound(null); };
   }
-  function confirmRound() {
+  function conjureCards() {
     const c = S.current;
-    if (!c || !c.card || !c.pending) return;
-    const special = c.card.type === 'special';
-    const team = special ? c.card.number : c.team;
-    if (team == null) return;
-    const raw = $('removed').value;
-    const n = Number(raw === '' ? 0 : raw);
-    if (!Number.isInteger(n) || n < 0 || n > S.counts[team]) { $('err').textContent = `Enter a whole number from 0 to ${S.counts[team]}.`; return; }
-    S.counts[team] -= n;
-    if (c.person) S.picked.push(nkey(c.person.name));   // the receiver is used up for this cycle
-    S.log.unshift({ round: S.round, team, removed: n, left: S.counts[team], special,
-                    person: c.person ? c.person.name : null, personObj: c.person, card: c.card });
-    c.pending = false;
-    if (S.counts[team] === 0) S.won = team;
-    save(); renderAll(); loadPool();
+    if (!c || c.cards || !c.person || picking || S.won != null) return;
+    c.cards = newCards(S.cpr); c.team = null; c.done = false;
+    save(); renderAll(true);
+  }
+  function recordRound(team) {
+    const c = S.current;
+    if (!c || !c.cards || c.done || S.won != null) return;
+    if (team != null) S.wins[team]++;
+    S.picked.push(nkey(c.person.name));
+    S.log.unshift({ round: S.round, team, wins: team != null ? S.wins[team] : null, person: c.person.name, cards: c.cards });
+    c.done = true; c.winner = team;
+    if (team != null && S.wins[team] >= S.need) S.won = team;
+    save(); renderAll();
+    if (team != null) celebrateRound(team);
+    if (S.won != null) celebrateChampion(S.won);
   }
   function undo() {
     const e = S.log.shift();
     if (!e) return;
-    S.counts[e.team] += e.removed;
-    if (e.personObj) S.picked = S.picked.filter((k) => k !== nkey(e.personObj.name));
+    if (e.team != null) S.wins[e.team]--;
+    S.picked = S.picked.filter((k) => k !== nkey(e.person));
     S.won = null;
-    S.current = { card: e.card, person: e.personObj || null, team: e.special ? null : e.team, pending: true };
-    save(); renderAll(); loadPool();
+    S.current = { person: { name: e.person }, cards: e.cards, team: e.team, done: false, winner: null };
+    save(); renderAll();
   }
-  async function startRound() {
+  function startRound() {
     if (S.won != null || picking || Date.now() < busyUntil) return;
     const c = S.current;
-    if (c && c.card && c.pending && !confirm('This round has not been recorded yet. Start the next round anyway?')) return;
-    if (c && c.card) S.history.unshift(c.card);
-    S.history = S.history.slice(0, 10);
+    if (c && c.cards && !c.done && !confirm('This round has no result yet. Start the next round anyway?')) return;
+    if (c && c.cards) S.history.unshift(c.cards);
+    S.history = S.history.slice(0, 3);
     S.round++;
-    S.current = { card: null, person: null, pending: true };
-    save(); renderAll();
-    pickPerson();
-  }
-  function conjureCard() {
-    const c = S.current;
-    if (!c || c.card || !c.person || picking || S.won != null) return;
-    const card = newCard();
-    c.card = card; c.pending = card.type !== 'plain'; c.team = null;
-    save(); renderAll(true);
+    S.current = { person: null, cards: null, team: null, done: false, winner: null };
+    save(); pickPerson();
   }
   function primaryAction() {
     if (S.won != null || picking || Date.now() < busyUntil) return;
     const c = S.current;
-    if (!c || (c.card && !c.pending)) startRound();
-    else if (!c.card && !c.person) pickPerson();
-    else if (!c.card) conjureCard();
-    else startRound();
+    if (!c || c.done) startRound();
+    else if (!c.cards && !c.person) pickPerson();
+    else if (!c.cards) conjureCards();
+    else startRound();   // cards on screen without a result: asks before skipping
   }
-  const draw = primaryAction;
   function newGame() {
-    if ((S.log.length || S.round) && !confirm('Start a new game? Card counts and rounds will be reset.')) return;
-    const start = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
-    S = { ...fresh(start), mix: S.mix, special: S.special, plain: S.plain, secs: S.secs };
-    save(); renderAll(); loadPool();
+    if ((S.log.length || S.round) && !confirm('Start a new game? Wins and rounds will be reset.')) return;
+    S = { ...fresh(), need: S.need, cpr: S.cpr, secs: S.secs };
+    save(); renderAll();
   }
   function renderAll(animate) {
     $('round').textContent = S.round ? `· Round ${S.round}` : '';
-    $('start').value = S.start;
     syncSettings();
-    const card = $('card');
-    if (S.current && S.current.card) card.innerHTML = cardSvg(S.current.card);
-    else if (S.current) { if (!card.querySelector('.bigdeck')) card.replaceChildren(buildBigDeck()); }   // teams are shuffling
-    else card.innerHTML = '';
-    setInfo(S.current && S.current.card);
-    renderHist(); renderAction(); buildChips(); renderLog(); renderWin();
+    const wrap = $('card'), c = S.current;
+    if (c && c.cards) wrap.replaceChildren(...c.cards.map((card) => mk('div', 'pc', cardSvg(card))));
+    else if (c) { if (!wrap.querySelector('.bigdeck')) wrap.replaceChildren(buildBigDeck()); }   // teams are shuffling
+    else wrap.replaceChildren();
+    setInfo(); renderHist(); renderAction(); buildChips(); renderLog(); renderWin(); renderPoolList();
     $('draw').disabled = S.won != null;
-    const cur = S.current;
-    $('draw').innerHTML = !cur || (cur.card && !cur.pending) ? '🎲 Pick a person <small>(Space)</small>'
-      : !cur.card ? (cur.person ? '🧚 Conjure card <small>(Space)</small>' : '🎲 Pick a person <small>(Space)</small>')
-      : 'Skip to next round <small>(Space)</small>';
-    if (animate && S.current && S.current.card) conjure(S.current.card.type === 'special');
+    $('draw').innerHTML = !c || c.done ? '🎲 Pick the receiver <small>(Space)</small>'
+      : !c.cards ? (c.person ? `🧚 Conjure ${S.cpr} card${S.cpr > 1 ? 's' : ''} <small>(Space)</small>` : '🎲 Pick the receiver <small>(Space)</small>')
+      : 'No winner · next round <small>(Space)</small>';
+    if (animate && c && c.cards) conjure();
   }
 
-  // ---------- wiring ----------
-  $('draw').onclick = draw;
-  $('undo').onclick = undo;
-  $('reset').onclick = newGame;
-  $('start').onchange = () => {
-    const v = Math.max(1, Math.min(200, parseInt($('start').value, 10) || 40));
-    if (S.log.length === 0 && S.won == null) { S.start = v; S.counts = Array(10).fill(v); save(); renderAll(); }
-    else { $('start').value = S.start; alert('Cards per team can only change before the first round is recorded. Use "New game" to restart with a new number.'); }
-  };
-  document.addEventListener('keydown', (e) => {
-    if (!$('tour').classList.contains('hidden')) return;
-    if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA', 'SUMMARY'].includes(document.activeElement.tagName)) { e.preventDefault(); draw(); }
-  });
-  $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
-$('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
-
-  // ---------- game balance + duration estimate ----------
-  const PRESETS = {
-    fast:     { mix: { color: 8, number: 1, both: 1 }, special: 20, plain: 0 },
-    balanced: { mix: { color: 6, number: 2, both: 2 }, special: 15, plain: 5 },
-    long:     { mix: { color: 3, number: 3, both: 4 }, special: 10, plain: 10 },
-  };
-  function syncSettings() {
-    $('wColor').value = S.mix.color; $('wNumber').value = S.mix.number; $('wBoth').value = S.mix.both;
-    $('sp').value = String(S.special); $('pl').value = String(S.plain); $('secs').value = S.secs;
-  }
+  // ---------- settings + duration estimate ----------
+  function syncSettings() { $('cpr').value = S.cpr; $('need').value = S.need; $('secs').value = S.secs; }
   function readSettings() {
-    const w = (id) => Math.max(0, Math.min(100, Math.floor(Number($(id).value) || 0)));
-    S.mix = { color: w('wColor'), number: w('wNumber'), both: w('wBoth') };
-    if (S.mix.color + S.mix.number + S.mix.both === 0) { S.mix.color = 1; $('wColor').value = 1; }
-    S.special = Number($('sp').value); S.plain = Number($('pl').value);
-    S.secs = Math.max(10, Math.min(300, Math.floor(Number($('secs').value) || 30)));
-    save(); scheduleEstimate();
+    const n = (id, lo, hi, d) => Math.max(lo, Math.min(hi, Math.floor(Number($(id).value) || d)));
+    S.cpr = n('cpr', 1, 5, 3); S.need = n('need', 1, 10, 3); S.secs = n('secs', 10, 300, 45);
+    const w = S.wins.findIndex((x) => x >= S.need);
+    if (S.won == null && w >= 0 && S.log.length) S.won = w;
+    else if (S.won != null && S.wins[S.won] < S.need) S.won = null;
+    save(); renderAll(); scheduleEstimate();
   }
-  // Monte Carlo: each team holds `cards` random cards (4 colours x numbers 0-9); one team is hit per round.
-  function simGame(o) {
-    const R = (n) => Math.floor(Math.random() * n);
-    const hands = Array.from({ length: 10 }, () => Array.from({ length: 4 }, () => new Array(10).fill(0)));
-    const tot = new Array(10).fill(o.cards);
-    for (let t = 0; t < 10; t++) for (let i = 0; i < o.cards; i++) hands[t][R(4)][R(10)]++;
-    const remove = (t, fn) => {
-      let r = 0;
-      for (let c = 0; c < 4; c++) for (let n = 0; n < 10; n++) if (fn(c, n)) { r += hands[t][c][n]; hands[t][c][n] = 0; }
-      tot[t] -= r;
-    };
-    const m = o.mix, wsum = (m.color + m.number + m.both) || 1;
-    for (let round = 1; round < 1500; round++) {
-      const r = Math.random();
-      if (r < o.special / 100) {
-        const t = R(10);
-        let best = -1, bc = 0;
-        for (let c = 0; c < 4; c++) { const v = hands[t][c].reduce((x, y) => x + y, 0); if (v > best) { best = v; bc = c; } }
-        remove(t, (c) => c === bc);
-        if (tot[t] === 0) return round;
-        continue;
-      }
-      if (r < (o.special + o.plain) / 100) continue;
-      const t = R(10), k = Math.random() * wsum;
-      if (k < m.color) { const cc = R(4); remove(t, (c) => c === cc); }
-      else if (k < m.color + m.number) { const nn = R(10); remove(t, (c, n) => n === nn); }
-      else { const cc = R(4), nn = R(10); remove(t, (c, n) => c === cc && n === nn); }
-      if (tot[t] === 0) return round;
-    }
-    return 1500;
-  }
-  function estimate(o, games = 400) {
-    const rs = Array.from({ length: games }, () => simGame(o)).sort((a, b) => a - b);
-    const q = (p) => rs[Math.floor(p * (games - 1))];
-    const mins = (rounds) => Math.max(1, Math.round(rounds * S.secs / 60));
-    return { p10: q(0.1), med: q(0.5), p90: q(0.9), lo: mins(q(0.1)), mid: mins(q(0.5)), hi: mins(q(0.9)) };
+  function simRounds(need) {   // every team equally likely to win each round
+    const w = new Array(10).fill(0);
+    for (let r = 1; r < 3000; r++) { if (++w[Math.floor(Math.random() * 10)] >= need) return r; }
+    return 3000;
   }
   let estTimer;
-  function scheduleEstimate() {
-    $('estimate').className = ''; $('estimate').textContent = 'estimating...';
-    clearTimeout(estTimer); estTimer = setTimeout(updateEstimates, 250);
+  function scheduleEstimate() { $('estimate').className = ''; $('estimate').textContent = 'estimating...'; clearTimeout(estTimer); estTimer = setTimeout(updateEstimate, 250); }
+  function updateEstimate() {
+    const games = 500, rs = Array.from({ length: games }, () => simRounds(S.need)).sort((a, b) => a - b);
+    const q = (p) => rs[Math.floor(p * (games - 1))], mins = (r) => Math.max(1, Math.round(r * S.secs / 60));
+    const el = $('estimate'), mid = mins(q(0.5));
+    el.textContent = `~${q(0.5)} rounds (typical ${q(0.1)}-${q(0.9)}) ≈ ${mid} min (${mins(q(0.1))}-${mins(q(0.9))}) at ${S.secs}s/round · target 10-20 min`;
+    el.className = mid >= 10 && mid <= 20 ? 'ok' : 'warn';
   }
-  function updateEstimates() {
-    const e = estimate({ cards: S.start, mix: S.mix, special: S.special, plain: S.plain });
-    const el = $('estimate');
-    el.textContent = `~${e.med} rounds (typical ${e.p10}-${e.p90}) ≈ ${e.mid} min (${e.lo}-${e.hi}) at ${S.secs}s/round · target 10-20 min`;
-    el.className = e.mid >= 10 && e.mid <= 20 ? 'ok' : 'warn';
-    document.querySelectorAll('#balance button[data-p]').forEach((b) => {
-      const p = PRESETS[b.dataset.p], pe = estimate({ cards: S.start, ...p }, 200);
-      b.textContent = `${{ fast: 'Faster', balanced: 'Balanced', long: 'Longer' }[b.dataset.p]} · ~${pe.mid} min`;
-    });
-  }
-  ['wColor', 'wNumber', 'wBoth', 'sp', 'pl', 'secs'].forEach((id) => { $(id).addEventListener('input', readSettings); $(id).addEventListener('change', readSettings); });
-  document.querySelectorAll('#balance button[data-p]').forEach((b) => {
-    b.onclick = () => { const p = PRESETS[b.dataset.p]; S.mix = { ...p.mix }; S.special = p.special; S.plain = p.plain; save(); syncSettings(); scheduleEstimate(); };
-  });
-  $('start').addEventListener('change', scheduleEstimate);
 
-  // ---------- Uno Fairy: icon + "the fairy conjures the card" animation ----------
+  // ---------- Uno Fairy: icon + "the fairy conjures the cards" animation ----------
   const FAIRY_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairy">` +
     `<g class="wing l"><ellipse cx="26" cy="46" rx="21" ry="12" transform="rotate(-28 26 46)" fill="#bfe9ff" stroke="#fff" stroke-width="2" opacity=".92"/>` +
     `<ellipse cx="29" cy="64" rx="14" ry="8" transform="rotate(24 29 64)" fill="#e8c9ff" stroke="#fff" stroke-width="2" opacity=".92"/></g>` +
@@ -708,18 +516,14 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
   const SPARK_GLYPHS = ['✦', '✧', '★', '✶'];
   let busyUntil = 0, conjureId = 0;
   function spark(x, y, o = {}, parent = $('fx')) {
-    const s = document.createElement('div'); s.className = 'spark';
-    s.textContent = pick(SPARK_GLYPHS);
-    s.style.left = x + 'px'; s.style.top = y + 'px';
-    s.style.color = pick(SPARK_COLORS); s.style.fontSize = (o.size || 8 + rnd() * 14) + 'px';
+    const s = mk('div', 'spark', pick(SPARK_GLYPHS));
+    s.style.left = x + 'px'; s.style.top = y + 'px'; s.style.color = pick(SPARK_COLORS); s.style.fontSize = (o.size || 8 + rnd() * 14) + 'px';
     parent.appendChild(s);
     const dx = o.dx != null ? o.dx : (rnd() - 0.5) * 36, dy = o.dy != null ? o.dy : 12 + rnd() * 38;
-    const a = s.animate([
-      { transform: 'translate(-50%,-50%) scale(.2) rotate(0deg)', opacity: 0 },
-      { opacity: 1, offset: 0.25 },
+    s.animate([
+      { transform: 'translate(-50%,-50%) scale(.2) rotate(0deg)', opacity: 0 }, { opacity: 1, offset: 0.25 },
       { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1) rotate(${Math.round((rnd() - 0.5) * 200)}deg)`, opacity: 0 },
-    ], { duration: o.dur || 600 + rnd() * 500, easing: 'ease-out' });
-    a.onfinish = () => s.remove();
+    ], { duration: o.dur || 600 + rnd() * 500, easing: 'ease-out' }).onfinish = () => s.remove();
   }
   function burst(cx, cy, n, radius, parent) {
     for (let i = 0; i < n; i++) {
@@ -727,40 +531,37 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
       spark(cx, cy, { dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist, dur: 700 + rnd() * 600, size: 10 + rnd() * 18 }, parent);
     }
   }
-  function conjure(special) {
-    const id = ++conjureId, card = $('card'), wrap = $('cardWrap'), fx = $('fx'), info = $('info');
-    card.getAnimations().forEach((a) => a.cancel());
+  function screenFx() {
+    let s = document.getElementById('screenfx');
+    if (!s) { s = document.createElement('div'); s.id = 'screenfx'; document.body.appendChild(s); }
+    return s;
+  }
+  // the fairy flies over each card in turn, and every card materialises when she passes
+  function conjure() {
+    const id = ++conjureId, wrap = $('cardWrap'), fx = $('fx'), cards = [...$('card').children], info = $('info');
+    cards.forEach((c) => c.getAnimations().forEach((a) => a.cancel()));
     fx.replaceChildren();
-    wrap.querySelectorAll('.rays').forEach((r) => r.remove());
-    screenFx().replaceChildren();
-    if (REDUCED) { card.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 }); return; }
-    if (special) { conjureSpecial(id, card, wrap, fx, info, S.current.card); return; }
-    const TOTAL = 2300, W = wrap.clientWidth, H = wrap.clientHeight;
-    busyUntil = Date.now() + 1900;
-    const sh = ' drop-shadow(0 18px 30px #000a)';
-    // the card materialises once the wand passes over it
-    card.animate([
-      { opacity: 0, transform: 'scale(.12) rotate(-28deg)', filter: 'blur(10px) brightness(2.4)' + sh, offset: 0 },
-      { opacity: 0, transform: 'scale(.12) rotate(-28deg)', filter: 'blur(10px) brightness(2.4)' + sh, offset: 0.24 },
-      { opacity: 1, transform: 'scale(1.1) rotate(5deg)', filter: 'blur(0) brightness(1.6)' + sh, offset: 0.52 },
-      { opacity: 1, transform: 'scale(1) rotate(0deg)', filter: 'blur(0) brightness(1)' + sh, offset: 0.66 },
-      { opacity: 1, transform: 'scale(1) rotate(0deg)', filter: 'none' + sh, offset: 1 },
-    ], { duration: TOTAL * 0.7, easing: 'cubic-bezier(.2,.8,.3,1)' });
-    info.animate([{ opacity: 0 }, { opacity: 0, offset: 0.55 }, { opacity: 1 }], { duration: 1500 });
-    // the fairy flies in, circles the card and flies off
-    const f = document.createElement('div'); f.className = 'fairy'; f.innerHTML = FAIRY_SVG; fx.appendChild(f);
-    const fw = f.offsetWidth || 90;
-    const path = [
-      [0, -0.35, 0.75, -8], [350, 0.10, 0.20, 6], [750, 0.50, -0.02, -6], [1050, 0.92, 0.32, 8],
-      [1350, 0.62, 0.78, 4], [1650, 0.12, 0.48, -6], [1950, 0.86, -0.04, 0], [2300, 1.35, -0.30, 8],
-    ];
-    const at = (p) => `translate(${p[1] * W - fw / 2}px, ${p[2] * H - fw / 2}px) rotate(${p[3]}deg)`;
-    f.animate(path.map((p, i) => ({ transform: at(p), opacity: i === path.length - 1 ? 0 : 1, offset: p[0] / TOTAL })),
+    if (REDUCED) { cards.forEach((c) => c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250 })); return; }
+    const n = cards.length, FIRST = 600, STEP = 520, TOTAL = FIRST + STEP * n + 900;
+    const W = wrap.clientWidth, H = wrap.clientHeight, wr = wrap.getBoundingClientRect();
+    busyUntil = Date.now() + TOTAL - 500;
+    const sh = ' drop-shadow(0 14px 22px #000a)';
+    const centers = cards.map((c) => { const r = c.getBoundingClientRect(); return [r.left - wr.left + r.width / 2, r.top - wr.top + r.height / 2, r.width]; });
+    cards.forEach((c, i) => {
+      c.animate([
+        { opacity: 0, transform: 'scale(.12) rotate(-28deg)', filter: 'blur(10px) brightness(2.4)' + sh, offset: 0 },
+        { opacity: 1, transform: 'scale(1.1) rotate(5deg)', filter: 'blur(0) brightness(1.6)' + sh, offset: 0.55 },
+        { opacity: 1, transform: 'scale(1) rotate(0deg)', filter: 'blur(0) brightness(1)' + sh, offset: 1 },
+      ], { duration: 800, delay: FIRST + i * STEP, fill: 'both', easing: 'cubic-bezier(.2,.8,.3,1)' });
+    });
+    info.animate([{ opacity: 0 }, { opacity: 0, offset: 0.7 }, { opacity: 1 }], { duration: TOTAL * 0.85 });
+    const f = mk('div', 'fairy', FAIRY_SVG); fx.appendChild(f);
+    const fw = f.offsetWidth || 90, pts = [[0, -0.2 * W, 0.55 * H, -8]];
+    centers.forEach(([x], i) => pts.push([FIRST - 150 + i * STEP, x, H * 0.04, i % 2 ? 6 : -6]));
+    pts.push([FIRST + STEP * n, W * 0.92, H * 0.62, 8], [TOTAL, W * 1.3, -0.3 * H, 8]);
+    f.animate(pts.map((p, i) => ({ transform: `translate(${p[1] - fw / 2}px, ${p[2] - fw / 2}px) rotate(${p[3]}deg)`, opacity: i === pts.length - 1 ? 0 : 1, offset: p[0] / TOTAL })),
       { duration: TOTAL, easing: 'ease-in-out', fill: 'both' }).onfinish = () => f.remove();
-    // wand dust follows the fairy
-    const fxRect = fx.getBoundingClientRect();
-    let last = 0;
-    const t0 = performance.now();
+    const fxRect = fx.getBoundingClientRect(); let last = 0; const t0 = performance.now();
     (function trail(now) {
       if (id !== conjureId || now - t0 > TOTAL) return;
       if (now - last > 40 && f.isConnected) {
@@ -770,149 +571,49 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
       }
       requestAnimationFrame(trail);
     })(t0);
-    setTimeout(() => { if (id === conjureId) burst(W / 2, H / 2, special ? 64 : 30, W * 0.75); }, 700);
-    setTimeout(() => { if (id === conjureId) burst(W / 2, H / 2, special ? 40 : 16, W * 0.55); }, 1250);
+    centers.forEach(([x, y, w], i) => setTimeout(() => { if (id === conjureId) burst(x, y, 26, w * 1.1); }, FIRST + i * STEP + 350));
   }
-
-  function screenFx() {
-    let s = document.getElementById('screenfx');
-    if (!s) { s = document.createElement('div'); s.id = 'screenfx'; document.body.appendChild(s); }
-    return s;
+  function toast(title, sub, ms) {
+    const sf = screenFx(), b = mk('div', 'banner');
+    b.append(title); const s = mk('small'); s.textContent = sub; b.append(s); sf.appendChild(b);
+    b.animate([
+      { opacity: 0, transform: 'translateX(-50%) scale(.2) rotate(-10deg)' }, { opacity: 1, transform: 'translateX(-50%) scale(1.15) rotate(2deg)', offset: 0.2 },
+      { opacity: 1, transform: 'translateX(-50%) scale(1) rotate(0deg)', offset: 0.35 }, { opacity: 1, transform: 'translateX(-50%) scale(1)', offset: 0.85 },
+      { opacity: 0, transform: 'translateX(-50%) translateY(-30px) scale(1)' },
+    ], { duration: ms, easing: 'ease-out' }).onfinish = () => b.remove();
   }
-  function conjureSpecial(id, card, wrap, fx, info, data) {
-    const TOTAL = 3400, W = wrap.clientWidth, H = wrap.clientHeight, sf = screenFx();
-    busyUntil = Date.now() + 3100;
-    const alive = () => id === conjureId;
-    const filt = (blur, bright, glowR) => `blur(${blur}px) brightness(${bright}) drop-shadow(0 0 ${glowR}px #ffd23f) drop-shadow(0 18px 30px #000a)`;
-    // spinning light rays behind the card
-    const rays = document.createElement('div'); rays.className = 'rays'; wrap.prepend(rays);
-    rays.animate([
-      { opacity: 0, transform: 'translate(-50%,-50%) rotate(0deg) scale(.4)' },
-      { opacity: 1, offset: 0.25 }, { opacity: 1, offset: 0.8 },
-      { opacity: 0, transform: 'translate(-50%,-50%) rotate(220deg) scale(1.15)' },
-    ], { duration: TOTAL, easing: 'ease-in-out' }).onfinish = () => rays.remove();
-    // the card spins in with a golden glow
-    card.animate([
-      { opacity: 0, transform: 'scale(.1) rotateY(0deg)', filter: filt(10, 3, 0), offset: 0 },
-      { opacity: 0, transform: 'scale(.1) rotateY(0deg)', filter: filt(10, 3, 0), offset: 0.22 },
-      { opacity: 1, transform: 'scale(1.25) rotateY(540deg)', filter: filt(0, 1.8, 34), offset: 0.55 },
-      { opacity: 1, transform: 'scale(1) rotateY(720deg)', filter: filt(0, 1.2, 20), offset: 0.7 },
-      { opacity: 1, transform: 'scale(1.05) rotateY(720deg)', filter: filt(0, 1.35, 32), offset: 0.82 },
-      { opacity: 1, transform: 'scale(1) rotateY(720deg)', filter: filt(0, 1, 18), offset: 0.92 },
-      { opacity: 1, transform: 'scale(1) rotateY(720deg)', filter: filt(0, 1, 0), offset: 1 },
-    ], { duration: TOTAL * 0.85, easing: 'cubic-bezier(.2,.8,.3,1)' });
-    info.animate([{ opacity: 0 }, { opacity: 0, offset: 0.6 }, { opacity: 1 }], { duration: 2100 });
-    // the fairy spirals twice around the card, then flies off
-    const f = document.createElement('div'); f.className = 'fairy'; f.innerHTML = FAIRY_SVG; fx.appendChild(f);
-    const fw = (f.offsetWidth || 90) * 1.4;
-    f.style.width = fw + 'px';
-    const pts = [[-0.4, 0.65, -10]];
-    const STEPS = 14;
-    for (let i = 0; i <= STEPS; i++) {
-      const ang = Math.PI * 1.2 + (i / STEPS) * Math.PI * 4.6, r = 0.95 - 0.35 * (i / STEPS);
-      pts.push([0.5 + Math.cos(ang) * r, 0.5 + Math.sin(ang) * r * 0.85, Math.round(Math.cos(ang) * 14)]);
+  function celebrateRound(team) {
+    if (REDUCED) return;
+    const chip = $('teams').children[TEAM_ORDER.indexOf(team)];
+    if (chip) { const r = chip.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, 30, 130, screenFx()); }
+    toast(`🏁 Team ${teamNo(team)} wins the round!`, `${S.wins[team]} / ${S.need}${teamNames[team] ? ' · ' + teamNames[team] : ''}`, 2400);
+  }
+  function celebrateChampion(team) {
+    if (REDUCED) return;
+    const sf = screenFx();
+    const fl = mk('div', 'flash'); sf.appendChild(fl);
+    fl.animate([{ opacity: 0 }, { opacity: 0.9, offset: 0.2 }, { opacity: 0 }], { duration: 1000, easing: 'ease-out' }).onfinish = () => fl.remove();
+    const vw = window.innerWidth, vh = window.innerHeight;
+    for (let i = 0; i < 90; i++) {
+      const s = mk('div', 'star', pick(SPARK_GLYPHS)); s.style.left = Math.round(rnd() * vw) + 'px';
+      s.style.fontSize = (12 + rnd() * 24) + 'px'; s.style.color = pick(['#ffd23f', '#ff6fb5', '#6fd8ff', '#b48cff', '#7dff9b', '#ffffff']); sf.appendChild(s);
+      const sway = (rnd() - 0.5) * 140;
+      s.animate([{ transform: 'translate(0,-40px) rotate(0deg)', opacity: 1 }, { transform: `translate(${sway}px, ${vh * 0.55}px) rotate(${Math.round(rnd() * 360)}deg)`, opacity: 1, offset: 0.6 },
+        { transform: `translate(${sway * 1.5}px, ${vh + 40}px) rotate(${Math.round(rnd() * 720)}deg)`, opacity: 0 }],
+        { duration: 1800 + rnd() * 1800, delay: rnd() * 900, easing: 'ease-in', fill: 'backwards' }).onfinish = () => s.remove();
     }
-    pts.push([1.5, -0.45, 12]);
-    const times = pts.map((_, i) => (i / (pts.length - 1)));
-    f.animate(pts.map((p, i) => ({
-      transform: `translate(${p[0] * W - fw / 2}px, ${p[1] * H - fw / 2}px) rotate(${p[2]}deg)`,
-      opacity: i === pts.length - 1 ? 0 : 1, offset: times[i],
-    })), { duration: TOTAL, easing: 'linear', fill: 'both' }).onfinish = () => f.remove();
-    // rainbow dust trail, two sparks per tick
-    const fxRect = fx.getBoundingClientRect();
-    let last = 0; const t0 = performance.now();
-    (function trail(now) {
-      if (!alive() || now - t0 > TOTAL) return;
-      if (now - last > 30 && f.isConnected) {
-        const r = f.getBoundingClientRect();
-        for (let k = 0; k < 2; k++) spark(r.left - fxRect.left + r.width * 0.88, r.top - fxRect.top + r.height * 0.3, { size: 9 + rnd() * 14 });
-        last = now;
-      }
-      requestAnimationFrame(trail);
-    })(t0);
-    // golden flash + big banner when the card lands
-    setTimeout(() => {
-      if (!alive()) return;
-      const fl = document.createElement('div'); fl.className = 'flash'; sf.appendChild(fl);
-      fl.animate([{ opacity: 0 }, { opacity: 0.9, offset: 0.2 }, { opacity: 0 }], { duration: 900, easing: 'ease-out' }).onfinish = () => fl.remove();
-      const b = document.createElement('div'); b.className = 'banner';
-      const tn = data.number === 0 ? 10 : data.number;
-      b.innerHTML = '★ SPECIAL ★<small></small>';
-      b.querySelector('small').textContent = `Team ${tn}${data.number === 0 ? ' 🚫' : ''}${teamNames[data.number] ? ' · ' + teamNames[data.number] : ''}`;
-      sf.appendChild(b);
-      b.animate([
-        { opacity: 0, transform: 'translateX(-50%) scale(.2) rotate(-10deg)' },
-        { opacity: 1, transform: 'translateX(-50%) scale(1.15) rotate(2deg)', offset: 0.25 },
-        { opacity: 1, transform: 'translateX(-50%) scale(1) rotate(0deg)', offset: 0.4 },
-        { opacity: 1, transform: 'translateX(-50%) scale(1) rotate(0deg)', offset: 0.85 },
-        { opacity: 0, transform: 'translateX(-50%) translateY(-30px) scale(1)' },
-      ], { duration: 2400, easing: 'ease-out' }).onfinish = () => b.remove();
-    }, 1000);
-    // shower of rainbow stars across the whole screen
-    setTimeout(() => {
-      if (!alive()) return;
-      const vw = window.innerWidth, vh = window.innerHeight;
-      for (let i = 0; i < 70; i++) {
-        const s = document.createElement('div'); s.className = 'star';
-        s.textContent = pick(SPARK_GLYPHS); s.style.left = Math.round(rnd() * vw) + 'px';
-        s.style.fontSize = (12 + rnd() * 22) + 'px'; s.style.color = pick(['#ffd23f', '#ff6fb5', '#6fd8ff', '#b48cff', '#7dff9b', '#ffffff']);
-        sf.appendChild(s);
-        const sway = (rnd() - 0.5) * 140;
-        s.animate([
-          { transform: 'translate(0,-40px) rotate(0deg)', opacity: 1 },
-          { transform: `translate(${sway}px, ${vh * 0.55}px) rotate(${Math.round(rnd() * 360)}deg)`, opacity: 1, offset: 0.6 },
-          { transform: `translate(${sway * 1.5}px, ${vh + 40}px) rotate(${Math.round(rnd() * 720)}deg)`, opacity: 0 },
-        ], { duration: 1600 + rnd() * 1600, delay: rnd() * 700, easing: 'ease-in', fill: 'backwards' }).onfinish = () => s.remove();
-      }
-    }, 900);
-    // bursts + three expanding golden rings
-    [[800, 90, 0.9], [1450, 60, 0.7], [2100, 44, 0.55]].forEach(([t, n, rad]) =>
-      setTimeout(() => { if (alive()) burst(W / 2, H / 2, n, W * rad); }, t));
-    [800, 1050, 1300].forEach((t) => setTimeout(() => {
-      if (!alive()) return;
-      const ring = document.createElement('div'); ring.className = 'ring'; fx.appendChild(ring);
-      ring.animate([{ transform: 'translate(-50%,-50%) scale(.2)', opacity: 1 }, { transform: 'translate(-50%,-50%) scale(2.6)', opacity: 0 }],
-        { duration: 1000, easing: 'ease-out' }).onfinish = () => ring.remove();
-    }, t));
   }
 
-  // ---------- guide tour (animated "how to play") ----------
-  const AUTO_MS = 9000;
-  const mk = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
-  let tourStep = 0, tourClean = [], tourAuto = true, tourTimer = null, tourTok = 0;
-  const tourLater = (fn, ms) => { const t = setTimeout(fn, ms); tourClean.push(() => clearTimeout(t)); return t; };
-  const tourEvery = (fn, ms) => { const t = setInterval(fn, ms); tourClean.push(() => clearInterval(t)); return t; };
-  const tourAnim = (el, kf, opt) => { const a = el.animate(kf, opt); tourClean.push(() => a.cancel()); return a; };
-  const stageSize = (st) => [st.clientWidth || 600, st.clientHeight || 280];
-  function trailOf(st, f, ms) {   // sparkles from the fairy's wand
-    tourEvery(() => {
-      const r = f.getBoundingClientRect(), s = st.getBoundingClientRect();
-      spark(r.left - s.left + r.width * 0.88, r.top - s.top + r.height * 0.3, { size: 8 + rnd() * 10 }, st);
-    }, ms || 60);
-  }
-  function sceneWelcome(st) {
-    const row = mk('div', 'tour-teams');
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n, i) => {
-      const d = mk('div', 'tt', (window.TEAM_AVATARS || {})[n] || ''); d.style.animationDelay = `${i * 140}ms`;
-      d.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(d);
-    });
-    const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(row, f);
-    const [W, H] = stageSize(st);
-    tourAnim(f, [
-      { transform: `translate(-120px, ${H * 0.6}px)` }, { transform: `translate(${W * 0.3}px, ${H * 0.05}px)` },
-      { transform: `translate(${W * 0.6}px, ${H * 0.4}px)` }, { transform: `translate(${W * 0.88}px, ${H * 0.02}px)` },
-      { transform: `translate(${W + 120}px, ${H * 0.5}px)` },
-    ], { duration: 5200, iterations: Infinity, easing: 'ease-in-out' });
-    trailOf(st, f);
-  }
-  function shuffleDeck(host, delay, seed = 0, anim = tourAnim) {   // a little pile of cards being shuffled (riffled) over and over
+  // ---------- shuffling visuals (used while the receiver is picked, and in the tour) ----------
+  const plainAnim = (el, kf, opt) => el.animate(kf, opt);
+  function shuffleDeck(host, delay, seed = 0, anim = plainAnim) {   // a little pile of cards being shuffled (riffled) over and over
     const deck = mk('div', 'sdeck'); host.append(deck);
     const cols = ['red', 'blue', 'green', 'yellow', 'red', 'green', 'blue'];
     cols.forEach((_, i) => {
       const c = cols[(i + seed) % cols.length];
       const k = mk('div', 'sc', String(1 + ((i * 3 + seed * 2) % 9))); k.style.background = COLORS[c].hex; k.style.zIndex = i; deck.append(k);
-      const dir = i % 2 ? 1 : -1;
       if (REDUCED) return;
+      const dir = i % 2 ? 1 : -1;
       anim(k, [
         { transform: 'translate(0, 0) rotate(0deg)', offset: 0 },
         { transform: `translate(${dir * 24}px, ${-6 - i * 2}px) rotate(${dir * 14}deg)`, offset: 0.35 },
@@ -921,24 +622,19 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
       ], { duration: 1200, delay: delay + i * 70, iterations: Infinity, easing: 'ease-in-out' });
     });
   }
-  const plainAnim = (el, kf, opt) => el.animate(kf, opt);
   function buildShuffleInfo() {   // side panel while the receiver is picked: every team shuffles its cards
     const w = mk('div', 'shufinfo');
     w.append(mk('div', 'big', '🔀 Shuffle your cards!'));
     const row = mk('div', 'shufteams');
-    [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].forEach((n, i) => {
+    TEAM_ORDER.forEach((n, i) => {
       const t = mk('div', 'tsh', (window.TEAM_AVATARS || {})[n] || '');
-      shuffleDeck(t, i * 110, i + 1, plainAnim);
+      shuffleDeck(t, i * 110, i + 1);
       t.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(t);
     });
-    w.append(row, mk('div', 'sub', 'All teams: shuffle your cards now. When the card appears, find the matching cards and run to the receiver!'));
+    w.append(row, mk('div', 'sub', 'All teams: shuffle your cards now. When the cards appear, find them in your hand and run to the receiver!'));
     return w;
   }
-  const cardBackSvg = () => `<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="bkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6fb5"/><stop offset=".5" stop-color="#ffd23f"/><stop offset="1" stop-color="#6fd8ff"/></linearGradient></defs>` +
-    `<rect width="200" height="300" rx="18" fill="#fff" stroke="#d6d6d6"/><rect x="10" y="10" width="180" height="280" rx="12" fill="#1b1f3a"/>` +
-    `<ellipse cx="100" cy="150" rx="62" ry="108" fill="url(#bkg)" transform="rotate(24 100 150)"/>` +
-    `<text x="100" y="178" text-anchor="middle" font-size="96" fill="#fff" stroke="#1b1f3a" stroke-width="6" paint-order="stroke">★</text></svg>`;
-  function buildBigDeck() {   // a big deck of card backs being shuffled where the card will appear
+  function buildBigDeck() {   // a big deck of card backs being shuffled where the cards will appear
     const d = mk('div', 'bigdeck');
     for (let i = 0; i < 8; i++) {
       const k = mk('div', 'bk', cardBackSvg()); k.style.zIndex = i; d.append(k);
@@ -953,20 +649,47 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
     }
     return d;
   }
+
+  // ---------- guide tour (animated "how to play") ----------
+  const AUTO_MS = 9000;
+  let tourStep = 0, tourClean = [], tourAuto = true, tourTimer = null, tourTok = 0;
+  const tourLater = (fn, ms) => { const t = setTimeout(fn, ms); tourClean.push(() => clearTimeout(t)); return t; };
+  const tourEvery = (fn, ms) => { const t = setInterval(fn, ms); tourClean.push(() => clearInterval(t)); return t; };
+  const tourAnim = (el, kf, opt) => { const a = el.animate(kf, opt); tourClean.push(() => a.cancel()); return a; };
+  const stageSize = (st) => [st.clientWidth || 600, st.clientHeight || 280];
+  function trailOf(st, f, ms) {   // sparkles from the fairy's wand
+    tourEvery(() => {
+      const r = f.getBoundingClientRect(), s = st.getBoundingClientRect();
+      spark(r.left - s.left + r.width * 0.88, r.top - s.top + r.height * 0.3, { size: 8 + rnd() * 10 }, st);
+    }, ms || 60);
+  }
+  function sceneWelcome(st) {
+    const row = mk('div', 'tour-teams');
+    TEAM_ORDER.forEach((n, i) => {
+      const d = mk('div', 'tt', (window.TEAM_AVATARS || {})[n] || ''); d.style.animationDelay = `${i * 140}ms`;
+      d.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(d);
+    });
+    const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(row, f);
+    const [W, H] = stageSize(st);
+    tourAnim(f, [
+      { transform: `translate(-120px, ${H * 0.6}px)` }, { transform: `translate(${W * 0.3}px, ${H * 0.05}px)` },
+      { transform: `translate(${W * 0.6}px, ${H * 0.4}px)` }, { transform: `translate(${W * 0.88}px, ${H * 0.02}px)` },
+      { transform: `translate(${W + 120}px, ${H * 0.5}px)` },
+    ], { duration: 5200, iterations: Infinity, easing: 'ease-in-out' });
+    trailOf(st, f);
+  }
   function scenePick(st) {
-    const names = [...RECEIVERS];
     const nm = mk('div', 'tour-slotname', '…'), box = mk('div', 'tour-slot'), res = mk('div', 'tour-slotres');
     box.append(nm); st.append(box, res);
-    // every team shuffles its own cards while the receiver is being picked
-    const row = mk('div', 'tour-shuf');
+    const row = mk('div', 'tour-shuf');   // every team shuffles its own cards while the receiver is being picked
     [1, 3, 5, 7, 0].forEach((n, i) => {
-      const t = mk('div', 'tsh', (window.TEAM_AVATARS || {})[n] || ''); shuffleDeck(t, i * 180, i + 1);
+      const t = mk('div', 'tsh', (window.TEAM_AVATARS || {})[n] || ''); shuffleDeck(t, i * 180, i + 1, tourAnim);
       t.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(t);
     });
     st.append(row);
     const cycle = () => {
       res.replaceChildren(); nm.classList.remove('land');
-      const iv = setInterval(() => { nm.textContent = pick(names); }, 80); tourClean.push(() => clearInterval(iv));
+      const iv = setInterval(() => { nm.textContent = pick(RECEIVERS); }, 80); tourClean.push(() => clearInterval(iv));
       tourLater(() => {
         clearInterval(iv); nm.textContent = pick(RECEIVERS); nm.classList.add('land');
         res.append(mk('div', 'tour-slotava', FAIRY_SVG), mk('div', null, '📥 Receiver: teams bring their cards here'));
@@ -976,75 +699,24 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
     cycle();
   }
   function sceneConjure(st) {
-    const card = mk('div', 'tour-card', cardSvg({ type: 'normal', color: 'blue', number: 7, option: { kind: 'color', value: 'red' } }));
-    const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(card, f);
-    const [W, H] = stageSize(st), DUR = 4400;
-    tourAnim(card, [
-      { opacity: 0, transform: 'scale(.1) rotate(-25deg)', offset: 0 }, { opacity: 0, transform: 'scale(.1) rotate(-25deg)', offset: 0.25 },
-      { opacity: 1, transform: 'scale(1.1) rotate(4deg)', offset: 0.5 }, { opacity: 1, transform: 'scale(1)', offset: 0.62 },
+    const defs = [{ color: 'blue', number: 7 }, { color: 'red', number: 0 }, { color: 'green', number: 3 }];
+    const row = mk('div', 'tour-trio'), els = defs.map((d) => { const e = mk('div', 'tt3', cardSvg(d)); row.append(e); return e; });
+    const f = mk('div', 'fairy tour-fairy', FAIRY_SVG); st.append(row, f);
+    const [W, H] = stageSize(st), DUR = 5400;
+    els.forEach((e, i) => tourAnim(e, [
+      { opacity: 0, transform: 'scale(.1) rotate(-25deg)', offset: 0 }, { opacity: 0, transform: 'scale(.1) rotate(-25deg)', offset: 0.1 + i * 0.14 },
+      { opacity: 1, transform: 'scale(1.1) rotate(4deg)', offset: 0.22 + i * 0.14 }, { opacity: 1, transform: 'scale(1)', offset: 0.3 + i * 0.14 },
       { opacity: 1, transform: 'scale(1)', offset: 0.9 }, { opacity: 0, transform: 'scale(1)', offset: 1 },
-    ], { duration: DUR, iterations: Infinity });
+    ], { duration: DUR, iterations: Infinity }));
+    const cx = [W / 2 - 106, W / 2, W / 2 + 106];
     tourAnim(f, [
-      { transform: `translate(-120px, ${H * 0.5}px)`, offset: 0 }, { transform: `translate(${W * 0.25}px, ${H * 0.02}px)`, offset: 0.2 },
-      { transform: `translate(${W * 0.5 - 43}px, ${H * 0.25}px)`, offset: 0.36 }, { transform: `translate(${W * 0.76}px, ${H * 0.04}px)`, offset: 0.55 },
-      { transform: `translate(${W + 120}px, ${H * 0.3}px)`, offset: 0.8 }, { transform: `translate(${W + 120}px, ${H * 0.3}px)`, offset: 1 },
+      { transform: `translate(-120px, ${H * 0.5}px)`, offset: 0 }, { transform: `translate(${cx[0] - 43}px, ${H * 0.02}px)`, offset: 0.16 },
+      { transform: `translate(${cx[1] - 43}px, ${H * 0.0}px)`, offset: 0.3 }, { transform: `translate(${cx[2] - 43}px, ${H * 0.02}px)`, offset: 0.44 },
+      { transform: `translate(${W + 120}px, ${H * 0.3}px)`, offset: 0.7 }, { transform: `translate(${W + 120}px, ${H * 0.3}px)`, offset: 1 },
     ], { duration: DUR, iterations: Infinity });
     trailOf(st, f);
-    const pop = () => tourLater(() => burst(W / 2, H / 2, 24, 140, st), 1150);
+    const pop = () => cx.forEach((x, i) => tourLater(() => burst(x, H / 2, 18, 80, st), (0.2 + i * 0.14) * DUR));
     pop(); tourEvery(pop, DUR);
-  }
-  function sceneBadge(st) {
-    const defs = [
-      { card: { type: 'normal', color: 'yellow', number: 1, option: { kind: 'color', value: 'green' } }, cap: 'Colour: every GREEN card' },
-      { card: { type: 'normal', color: 'red', number: 7, option: { kind: 'number', value: 6 } }, cap: 'Number: every card numbered 6' },
-      { card: { type: 'normal', color: 'blue', number: 2, option: { kind: 'both', color: 'green', number: 5 } }, cap: 'Colour + number: only the green 5' },
-    ];
-    const row = mk('div', 'tour-badges');
-    const items = defs.map((d) => {
-      const w = mk('div', 'tb'), c = mk('div', 'tb-card', cardSvg(d.card));
-      c.append(mk('i', 'tb-ring')); w.append(c, mk('div', 'tb-cap', d.cap)); row.append(w); return w;
-    });
-    st.append(row);
-    let i = 0; const on = () => items.forEach((w, k) => w.classList.toggle('on', k === i));
-    on(); tourEvery(() => { i = (i + 1) % items.length; on(); }, 2300);
-  }
-  function sceneDiscard(st) {
-    const hand = [['green', 4], ['red', 2], ['green', 9], ['blue', 5], ['green', 1], ['yellow', 7], ['green', 3], ['red', 8], ['blue', 0], ['green', 6]];
-    const head = mk('div', 'tour-dhead', 'CHECK <span class="dotg"></span> GREEN');
-    const row = mk('div', 'tour-hand'), count = mk('div', 'tour-count');
-    const cards = hand.map(([c, n]) => { const d = mk('div', 'hc', n === 0 ? '🚫' : String(n)); d.style.background = COLORS[c].hex; row.append(d); return d; });
-    st.append(head, row, count);
-    const go = () => {
-      cards.forEach((d) => d.classList.remove('gone'));
-      let left = hand.length, k = 0; count.textContent = `${left} cards`;
-      hand.forEach(([c], i) => {
-        if (c !== 'green') return;
-        tourLater(() => { cards[i].classList.add('gone'); left--; count.textContent = `${left} cards left`; }, 1000 + 500 * k++);
-      });
-      tourLater(go, 1000 + 500 * k + 2200);
-    };
-    go();
-  }
-  function sceneSpecial(st) {
-    const rays = mk('div', 'tour-rays'), card = mk('div', 'tour-card', cardSvg({ type: 'special', number: 3 }));
-    const chip = mk('div', 'tour-chip', `<span class="tca">${(window.TEAM_AVATARS || {})[3] || ''}</span>Team 3 may remove ALL cards of one colour`);
-    st.append(rays, card, chip);
-    tourAnim(card, [{ transform: 'rotateY(0deg)' }, { transform: 'rotateY(360deg)' }], { duration: 3600, iterations: Infinity, easing: 'ease-in-out' });
-    tourAnim(rays, [{ transform: 'translate(-50%,-50%) rotate(0deg)' }, { transform: 'translate(-50%,-50%) rotate(360deg)' }], { duration: 9000, iterations: Infinity, easing: 'linear' });
-    const [W, H] = stageSize(st);
-    tourEvery(() => spark(W / 2 + (rnd() - 0.5) * 240, H / 2 + (rnd() - 0.5) * 190, { size: 10 + rnd() * 14 }, st), 110);
-  }
-  function sceneWin(st) {
-    const t = mk('div', 'tour-trophy', '🏆'); st.append(t);
-    tourAnim(t, [{ transform: 'translateY(0) scale(1)' }, { transform: 'translateY(-18px) scale(1.12)' }, { transform: 'translateY(0) scale(1)' }], { duration: 1200, iterations: Infinity, easing: 'ease-in-out' });
-    const [W, H] = stageSize(st);
-    tourEvery(() => {
-      const s = mk('div', 'spark', pick(SPARK_GLYPHS));
-      s.style.left = Math.round(rnd() * W) + 'px'; s.style.top = '-20px'; s.style.fontSize = (12 + rnd() * 18) + 'px'; s.style.color = pick(SPARK_COLORS);
-      st.append(s);
-      s.animate([{ transform: 'translateY(0) rotate(0deg)', opacity: 1 }, { transform: `translateY(${H + 40}px) rotate(${Math.round(rnd() * 540)}deg)`, opacity: 0.9 }],
-        { duration: 1800 + rnd() * 1200, easing: 'ease-in' }).onfinish = () => s.remove();
-    }, 100);
   }
   function sceneRace(st) {
     const [W] = stageSize(st);
@@ -1063,22 +735,58 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
     };
     run();
   }
+  function sceneReturn(st) {   // all teams receive their cards back
+    const [W, H] = stageSize(st), N = 5, gap = Math.min(86, (W - 40) / N);
+    const xs = Array.from({ length: N }, (_, i) => W / 2 + (i - (N - 1) / 2) * gap);
+    const row = mk('div', 'tour-back');
+    [2, 4, 6, 8, 0].forEach((n) => { const d = mk('div', 'tt', (window.TEAM_AVATARS || {})[n] || ''); d.style.width = gap - 8 + 'px'; d.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(d); });
+    const deck = mk('div', 'tour-recv', FAIRY_SVG + '<span>Receiver</span>'); deck.style.cssText = 'left:50%;right:auto;margin-left:-55px;top:6px;margin-top:0;width:110px';
+    st.append(deck, row);
+    const go = () => xs.forEach((x, i) => {
+      const m = mk('div', 'mc', cardSvg({ color: pick(COLOR_KEYS), number: 1 + ri(9) })); st.append(m);
+      const a = m.animate([
+        { transform: `translate(${W / 2 - 13}px, 60px) rotate(0deg) scale(.6)`, opacity: 0, offset: 0 },
+        { opacity: 1, offset: 0.15 },
+        { transform: `translate(${x - 13}px, ${H - 128}px) rotate(${(i - 2) * 12}deg) scale(1)`, opacity: 1, offset: 0.85 },
+        { transform: `translate(${x - 13}px, ${H - 118}px) rotate(0deg) scale(.9)`, opacity: 0 },
+      ], { duration: 1300, delay: i * 260, easing: 'ease-in-out', fill: 'backwards' });
+      a.onfinish = () => m.remove(); tourClean.push(() => { a.cancel(); m.remove(); });
+    });
+    go(); tourEvery(go, 3200);
+  }
+  function sceneWin(st) {
+    const ava = mk('div', 'tour-winava', (window.TEAM_AVATARS || {})[5] || ''), trophy = mk('div', 'tour-trophy', '🏆');
+    const stars = mk('div', 'tour-stars'), bs = [0, 1, 2].map(() => { const b = mk('b', null, '★'); stars.append(b); return b; });
+    st.append(ava, stars, trophy);
+    const [W, H] = stageSize(st);
+    const cycle = () => {
+      bs.forEach((b) => b.classList.remove('on')); trophy.style.opacity = 0;
+      bs.forEach((b, i) => tourLater(() => { b.classList.add('on'); burst(W / 2 + (i - 1) * 50, 150, 10, 40, st); }, 700 + i * 900));
+      tourLater(() => {
+        trophy.style.opacity = 1; trophy.animate([{ transform: 'scale(.3)' }, { transform: 'scale(1.2)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 500 });
+        for (let i = 0; i < 22; i++) tourLater(() => {
+          const s = mk('div', 'spark', pick(SPARK_GLYPHS)); s.style.left = Math.round(rnd() * W) + 'px'; s.style.top = '-20px'; s.style.fontSize = (12 + rnd() * 18) + 'px'; s.style.color = pick(SPARK_COLORS); st.append(s);
+          s.animate([{ transform: 'translateY(0) rotate(0deg)', opacity: 1 }, { transform: `translateY(${H + 40}px) rotate(${Math.round(rnd() * 540)}deg)`, opacity: 0.9 }], { duration: 1600 + rnd() * 1000, easing: 'ease-in' }).onfinish = () => s.remove();
+        }, i * 70);
+      }, 700 + 3 * 900);
+      tourLater(cycle, 7600);
+    };
+    cycle();
+  }
   const TOUR = [
-    { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: '10 teams, 40 number cards each. Be the first team to get rid of every card!' },
-    { title: '1 · Pick the receiver & shuffle', scene: scenePick, text: 'One of the organisers is picked at random as the receiver. While the names spin, every team SHUFFLES its cards! Then the card appears and teams race to the receiver.' },
-    { title: '2 · The fairy conjures a card', scene: sceneConjure, text: 'The fairy creates a card. Watch the little badge in the corner of the card!' },
-    { title: '3 · Read the corner badge', scene: sceneBadge, text: 'Colour: every card of that colour. Number: every card with that number. Colour + number: only that exact card. The big colour and number on the face do not count! The 0 is played with the ban card 🚫.' },
-    { title: '4 · Race to the receiver', scene: sceneRace, text: 'Every team holding matching cards runs to the receiver. The first team to arrive wins the round!' },
-    { title: '5 · Discard and count', scene: sceneDiscard, text: 'The winning team discards its matching cards and tells the host how many. The host picks the team, types the number, and the count goes down.' },
-    { title: '★ Special card', scene: sceneSpecial, text: 'A rainbow card with a star! The team whose number is on the card may remove ALL cards of one colour of their choice.' },
-    { title: 'Win the game', scene: sceneWin, text: 'The first team with no cards left wins. Keep an eye on the scoreboard!' },
+    { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: () => `10 teams. Every round the fairy conjures ${S.cpr} cards. The first team to win ${S.need} rounds wins the game!` },
+    { title: '1 · Pick the receiver & shuffle', scene: scenePick, text: () => 'One of the organisers is picked at random as the receiver. While the names spin, every team SHUFFLES its cards!' },
+    { title: '2 · The fairy conjures the cards', scene: sceneConjure, text: () => `The fairy creates ${S.cpr} cards, each with a colour and a number. The 0 is played with the ban card 🚫.` },
+    { title: '3 · Race to the receiver', scene: sceneRace, text: () => 'Find those cards in your hand (same colour AND number) and run to the receiver with all of them. The first team there wins the round!' },
+    { title: '4 · Cards back, new round', scene: sceneReturn, text: () => 'All teams take their cards back, shuffle again, and a new receiver is picked for the next round.' },
+    { title: '5 · Win the game', scene: sceneWin, text: () => `The first team to win ${S.need} rounds is the champion! Keep an eye on the scoreboard.` },
   ];
   function showStep(i) {
     tourClean.forEach((f) => f()); tourClean = []; clearTimeout(tourTimer);
     tourStep = Math.max(0, Math.min(TOUR.length - 1, i));
     const s = TOUR[tourStep], st = $('tourStage'), last = tourStep === TOUR.length - 1;
     st.replaceChildren();
-    $('tourTitle').textContent = s.title; $('tourText').textContent = s.text;
+    $('tourTitle').textContent = s.title; $('tourText').textContent = s.text();
     $('tourDots').replaceChildren(...TOUR.map((_, k) => { const d = mk('i', k === tourStep ? 'on' : ''); d.onclick = () => { tourAuto = false; showStep(k); }; return d; }));
     $('tourBack').disabled = tourStep === 0;
     $('tourNext').textContent = last ? '▶ Start playing' : 'Next →';
@@ -1095,18 +803,30 @@ $('clearPicked').onclick = () => { S.picked = []; save(); loadPool(); $('poolMsg
   function openTour() { tourAuto = true; $('tour').classList.remove('hidden'); showStep(0); }
   function closeTour() {
     tourTok++; $('tour').classList.add('hidden'); tourClean.forEach((f) => f()); tourClean = []; clearTimeout(tourTimer);
-    try { localStorage.setItem('unoTourSeen', '1'); } catch {}
+    try { localStorage.setItem('unoTour.v2', '1'); } catch {}
   }
   const tourGo = (d) => { tourAuto = false; if (d > 0 && tourStep === TOUR.length - 1) closeTour(); else showStep(tourStep + d); };
+
+  // ---------- wiring ----------
+  $('draw').onclick = primaryAction;
+  $('undo').onclick = undo;
+  $('reset').onclick = newGame;
+  $('clearPicked').onclick = () => { S.picked = []; save(); renderPoolList(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
+  ['cpr', 'need', 'secs'].forEach((id) => { $(id).addEventListener('change', readSettings); });
+  $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
   $('helpBtn').onclick = openTour;
   $('tourX').onclick = closeTour; $('tourSkip').onclick = closeTour;
   $('tourNext').onclick = () => tourGo(1); $('tourBack').onclick = () => tourGo(-1);
   document.addEventListener('keydown', (e) => {
-    if ($('tour').classList.contains('hidden')) return;
-    if (e.key === 'ArrowRight') tourGo(1); else if (e.key === 'ArrowLeft') tourGo(-1); else if (e.key === 'Escape') closeTour();
+    if (!$('tour').classList.contains('hidden')) {
+      if (e.key === 'ArrowRight') tourGo(1); else if (e.key === 'ArrowLeft') tourGo(-1); else if (e.key === 'Escape') closeTour();
+      return;
+    }
+    if ((e.key === ' ' || e.key === 'Enter') && !['SELECT', 'BUTTON', 'INPUT', 'TEXTAREA', 'SUMMARY'].includes(document.activeElement.tagName)) { e.preventDefault(); primaryAction(); }
   });
-  renderAll(); loadPool(); scheduleEstimate();
-  try { if (!localStorage.getItem('unoTourSeen')) setTimeout(openTour, 700); } catch {}   // first visit: show the guide
+  ready = true;
+  renderAll(); scheduleEstimate();
+  try { if (!localStorage.getItem('unoTour.v2')) setTimeout(openTour, 700); } catch {}   // first visit: show the guide
 </script>
 </body>
 </html>
