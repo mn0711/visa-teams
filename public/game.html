@@ -140,6 +140,14 @@
   .tour-stars b { font-weight:400; transition:color .3s, transform .3s; display:inline-block; } .tour-stars b.on { color:var(--gold); transform:scale(1.25); text-shadow:0 0 14px #ffd23f; }
   .tour-winava { position:absolute; left:50%; top:52px; width:78px; margin-left:-39px; } .tour-winava svg { width:100%; height:100%; }
   .tour-trophy { position:absolute; left:50%; top:178px; width:100px; margin-left:-50px; font-size:64px; line-height:1; filter:drop-shadow(0 0 20px #ffd23f); opacity:0; }
+  .chip.dim { opacity:.4; } .chip.tie { outline:2px dashed var(--gold); }
+  .tour-score { position:absolute; left:0; right:0; top:34px; display:flex; justify-content:center; gap:20px; }
+  .ts { position:relative; text-align:center; width:72px; font-size:.72rem; color:var(--muted); }
+  .ts svg { width:52px; height:52px; display:block; margin:0 auto; }
+  .ts b { display:block; font-size:2rem; line-height:1.1; color:#fff; transition:transform .25s, color .25s; }
+  .ts em { position:absolute; top:-24px; left:50%; transform:translateX(-50%); font-style:normal; font-size:1.6rem; opacity:0; transition:opacity .3s; }
+  .ts.lead b { color:var(--gold); } .ts.out { opacity:.35; }
+  .tour-tie { position:absolute; left:0; right:0; bottom:14px; font-size:1.05rem; font-weight:800; color:var(--gold); text-shadow:0 2px 6px #000; }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -169,10 +177,10 @@
   <div class="bal">
     <div class="balrow">
       <label>Cards per round <input id="cpr" type="number" min="1" max="5"></label>
-      <label>Rounds to win the game <input id="need" type="number" min="1" max="10"></label>
-      <label>Seconds per round <input id="secs" type="number" min="10" max="300"></label>
+      <label>Rounds in the game <input id="rounds" type="number" min="1" max="20"></label>
+      <label>Seconds per round <input id="secs" type="number" min="10" max="600"></label>
     </div>
-    <div class="hint2">Each round the fairy conjures this many cards. A team wins the round by reaching the receiver first with all of them. The estimate assumes every team is equally likely to win a round (simulated 500 games).</div>
+    <div class="hint2">Each round the fairy conjures this many cards. A team wins a round by reaching the receiver first with all of them. After the last round the team with the most round wins is the champion. If teams are tied for the most wins, only those teams play extra tie-break rounds until one wins. The estimate assumes every team is equally likely to win a round.</div>
   </div>
 </details>
 <details class="pool" id="pool">
@@ -258,8 +266,8 @@
     `<text x="100" y="178" text-anchor="middle" font-size="96" fill="#fff" stroke="#1b1f3a" stroke-width="6" paint-order="stroke">★</text></svg>`;
 
   // ---------- game state (saved in this browser) ----------
-  const KEY = 'unoGame.v2';
-  const fresh = () => ({ need: 3, cpr: 3, secs: 45, wins: new Array(10).fill(0), round: 0, picked: [], last: null, log: [], history: [], current: null, won: null });
+  const KEY = 'unoGame.v3';
+  const fresh = () => ({ rounds: 5, cpr: 3, secs: 150, wins: new Array(10).fill(0), round: 0, picked: [], last: null, log: [], history: [], current: null, won: null });
   let S = fresh();
   try {
     const s = JSON.parse(localStorage.getItem(KEY) || 'null');
@@ -267,6 +275,17 @@
   } catch {}
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {} };
   const nkey = (name) => name.normalize('NFC').toLowerCase().replace(/\s+/g, '');
+
+  // Rule: play S.rounds rounds; the team with the most round wins is the champion.
+  // If several teams share the most wins, only those teams play extra tie-break rounds until one of them wins.
+  function leadersInfo() { const max = Math.max(...S.wins); return { max, tied: TEAM_ORDER.filter((n) => S.wins[n] === max) }; }
+  function decide() {   // the champion, or null while the game is still going (or tied)
+    if (S.log.length < S.rounds) return null;
+    const { tied } = leadersInfo();
+    return tied.length === 1 ? tied[0] : null;
+  }
+  const contenders = () => (S.log.length >= S.rounds && S.won == null ? leadersInfo().tied : null);   // tie-break: only these can win
+  const tieNote = () => { const t = contenders(); return t ? `⚔️ Tie-break! Only Team ${t.map(teamNo).join(', ')} can win this round.` : ''; };
 
   // N distinct cards (colour + number), 0 = ban card
   function newCards(n) {
@@ -287,12 +306,14 @@
       const e = S.log[0];
       info.append(mk('div', 'big', e && e.team != null ? `🏆 Team ${teamNo(e.team)} wins the round!` : 'No winner this round'));
       info.append(mk('div', 'sub', 'All teams take their cards back. Shuffle, then pick the next receiver.'));
+      if (tieNote()) info.append(mk('div', 'callout', tieNote()));
       return;
     }
     info.append(mk('div', 'big', `Find these ${c.cards.length} card${c.cards.length > 1 ? 's' : ''}!`));
     const list = mk('div', 'chiplist');
     c.cards.forEach((card) => list.append(mk('span', 'cc', `<span class="dot" style="background:${COLORS[card.color].hex}"></span>${COLORS[card.color].name} ${numText(card.number)}`)));
     info.append(list, mk('div', 'sub', 'Same colour AND number. The first team to reach the receiver with all of them wins the round.'));
+    if (tieNote()) info.append(mk('div', 'callout', tieNote()));
   }
   function renderHist() {
     $('hist').replaceChildren(...S.history.slice(0, 3).map((set) => {
@@ -301,19 +322,19 @@
   }
   const currentTeam = () => (S.current && !S.current.done && S.current.team != null ? S.current.team : null);
   function buildChips() {
-    const cur = currentTeam();
+    const cur = currentTeam(), cont = contenders(), { max } = leadersInfo();
     $('teams').replaceChildren(...TEAM_ORDER.map((n) => {
-      const w = S.wins[n], d = mk('div', 'chip' + (cur === n ? ' hit' : '') + (S.won === n ? ' won' : ''));
+      const w = S.wins[n], d = mk('div', 'chip' + (cur === n ? ' hit' : '') + (S.won === n ? ' won' : '') + (cont ? (cont.includes(n) ? ' tie' : ' dim') : ''));
       d.innerHTML = (window.TEAM_AVATARS || {})[n] || '';
       d.append(mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`), mk('b', null, String(w)));
-      d.append(mk('div', 'stars', S.need <= 6 ? `${'★'.repeat(Math.min(w, S.need))}<span style="color:#ffffff55">${'☆'.repeat(Math.max(0, S.need - w))}</span>` : `${w}/${S.need}`));
-      const bar = mk('i'); bar.style.width = `${Math.min(100, Math.round(w / S.need * 100))}%`; d.append(bar);
+      d.append(mk('div', 'stars', w > 0 && w === max ? '👑' : ''));
+      const bar = mk('i'); bar.style.width = `${Math.min(100, Math.round(w / Math.max(1, S.rounds) * 100))}%`; d.append(bar);
       d.title = teamNames[n] || ''; return d;
     }));
   }
   function renderLog() {
     $('log').replaceChildren(...S.log.slice(0, 8).map((e) => mk('div', null,
-      `R${e.round} · ${e.team == null ? 'no winner' : `Team ${teamNo(e.team)} wins (${e.wins}/${S.need})`} · receiver ${e.person} · ${e.cards.map(cardShort).join(' ')}`)));
+      `R${e.round} · ${e.team == null ? 'no winner' : `Team ${teamNo(e.team)} wins (${e.wins} total)`} · receiver ${e.person} · ${e.cards.map(cardShort).join(' ')}`)));
   }
   function renderWin() {
     const w = $('win');
@@ -322,7 +343,7 @@
     const box = mk('div', 'box');
     box.append(mk('h2', null, `🏆 Team ${teamNo(S.won)}${nameOf(S.won)} wins the game!`));
     box.append(mk('div', 'ava', (window.TEAM_AVATARS || {})[S.won] || ''));
-    const p = mk('p', null, `${S.wins[S.won]} round${S.wins[S.won] > 1 ? 's' : ''} won.`); p.style.color = 'var(--muted)'; box.append(p);
+    const p = mk('p', null, `${S.wins[S.won]} round win${S.wins[S.won] > 1 ? 's' : ''}${S.log.length > S.rounds ? ', decided in a tie-break' : ''}.`); p.style.color = 'var(--muted)'; box.append(p);
     const row = mk('div'); row.style.cssText = 'display:flex;gap:8px;justify-content:center';
     const u = mk('button', null, '↶ Undo last round'); u.onclick = undo;
     const n = mk('button', 'primary', 'New game'); n.onclick = newGame;
@@ -387,9 +408,10 @@
     }
     showPerson();
     add('div', 'sub', 'Which team reached the receiver first with all the cards?');
-    const sel = add('div', 'teamsel');
+    const sel = add('div', 'teamsel'), cont = contenders();
     TEAM_ORDER.forEach((n) => {
       const b = add('button', 'tsel' + (c.team === n ? ' on' : ''), null, sel);
+      if (cont && !cont.includes(n)) b.disabled = true;
       b.innerHTML = `${(window.TEAM_AVATARS || {})[n] || ''}<span>${teamNo(n)}${n === 0 ? '🚫' : ''}</span>`;
       b.title = `Team ${teamNo(n)}${nameOf(n)}`;
       b.onclick = () => { c.team = n; save(); renderAction(); buildChips(); };
@@ -409,14 +431,20 @@
   function recordRound(team) {
     const c = S.current;
     if (!c || !c.cards || c.done || S.won != null) return;
+    const cont = contenders();
+    if (team != null && cont && !cont.includes(team)) return;   // tie-break: only tied teams can win
     if (team != null) S.wins[team]++;
     S.picked.push(nkey(c.person.name));
     S.log.unshift({ round: S.round, team, wins: team != null ? S.wins[team] : null, person: c.person.name, cards: c.cards });
     c.done = true; c.winner = team;
-    if (team != null && S.wins[team] >= S.need) S.won = team;
+    S.won = decide();
     save(); renderAll();
     if (team != null) celebrateRound(team);
     if (S.won != null) celebrateChampion(S.won);
+    else if (S.log.length >= S.rounds) {   // the last round is over but teams are tied
+      const { max, tied } = leadersInfo();
+      toast('⚔️ Tie-break!', `Team ${tied.map(teamNo).join(', ')} are tied on ${max} win${max === 1 ? '' : 's'}`, 3400);
+    }
   }
   function undo() {
     const e = S.log.shift();
@@ -443,15 +471,15 @@
     if (!c || c.done) startRound();
     else if (!c.cards && !c.person) pickPerson();
     else if (!c.cards) conjureCards();
-    else startRound();   // cards on screen without a result: asks before skipping
+    else if (confirm('No team had all the cards? The round counts as played with no winner.')) { recordRound(null); if (S.won == null) startRound(); }
   }
   function newGame() {
     if ((S.log.length || S.round) && !confirm('Start a new game? Wins and rounds will be reset.')) return;
-    S = { ...fresh(), need: S.need, cpr: S.cpr, secs: S.secs };
+    S = { ...fresh(), rounds: S.rounds, cpr: S.cpr, secs: S.secs };
     save(); renderAll();
   }
   function renderAll(animate) {
-    $('round').textContent = S.round ? `· Round ${S.round}` : '';
+    $('round').textContent = !S.round ? '' : S.round > S.rounds ? `· Tie-break · Round ${S.round}` : `· Round ${S.round} / ${S.rounds}`;
     syncSettings();
     const wrap = $('card'), c = S.current;
     if (c && c.cards) wrap.replaceChildren(...c.cards.map((card) => mk('div', 'pc', cardSvg(card))));
@@ -466,27 +494,27 @@
   }
 
   // ---------- settings + duration estimate ----------
-  function syncSettings() { $('cpr').value = S.cpr; $('need').value = S.need; $('secs').value = S.secs; }
+  function syncSettings() { $('cpr').value = S.cpr; $('rounds').value = S.rounds; $('secs').value = S.secs; }
   function readSettings() {
     const n = (id, lo, hi, d) => Math.max(lo, Math.min(hi, Math.floor(Number($(id).value) || d)));
-    S.cpr = n('cpr', 1, 5, 3); S.need = n('need', 1, 10, 3); S.secs = n('secs', 10, 300, 45);
-    const w = S.wins.findIndex((x) => x >= S.need);
-    if (S.won == null && w >= 0 && S.log.length) S.won = w;
-    else if (S.won != null && S.wins[S.won] < S.need) S.won = null;
+    S.cpr = n('cpr', 1, 5, 3); S.rounds = n('rounds', 1, 20, 5); S.secs = n('secs', 10, 600, 150);
+    if (S.log.length) S.won = decide();
     save(); renderAll(); scheduleEstimate();
   }
-  function simRounds(need) {   // every team equally likely to win each round
+  function tiedAfter(rounds) {   // simulate: every team equally likely to win each round; is the top spot shared?
     const w = new Array(10).fill(0);
-    for (let r = 1; r < 3000; r++) { if (++w[Math.floor(Math.random() * 10)] >= need) return r; }
-    return 3000;
+    for (let r = 0; r < rounds; r++) w[Math.floor(Math.random() * 10)]++;
+    const max = Math.max(...w);
+    return w.filter((x) => x === max).length > 1;
   }
   let estTimer;
   function scheduleEstimate() { $('estimate').className = ''; $('estimate').textContent = 'estimating...'; clearTimeout(estTimer); estTimer = setTimeout(updateEstimate, 250); }
   function updateEstimate() {
-    const games = 500, rs = Array.from({ length: games }, () => simRounds(S.need)).sort((a, b) => a - b);
-    const q = (p) => rs[Math.floor(p * (games - 1))], mins = (r) => Math.max(1, Math.round(r * S.secs / 60));
-    const el = $('estimate'), mid = mins(q(0.5));
-    el.textContent = `~${q(0.5)} rounds (typical ${q(0.1)}-${q(0.9)}) ≈ ${mid} min (${mins(q(0.1))}-${mins(q(0.9))}) at ${S.secs}s/round · target 10-20 min`;
+    const games = 3000; let ties = 0;
+    for (let i = 0; i < games; i++) if (tiedAfter(S.rounds)) ties++;
+    const pct = Math.round(ties / games * 100), mid = Math.max(1, Math.round((S.rounds + ties / games) * S.secs / 60));
+    const el = $('estimate');
+    el.textContent = `${S.rounds} rounds ≈ ${mid} min at ${S.secs}s/round · a tie-break (+1 round) is ~${pct}% likely · target 10-20 min`;
     el.className = mid >= 10 && mid <= 20 ? 'ok' : 'warn';
   }
 
@@ -586,7 +614,7 @@
     if (REDUCED) return;
     const chip = $('teams').children[TEAM_ORDER.indexOf(team)];
     if (chip) { const r = chip.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, 30, 130, screenFx()); }
-    toast(`🏁 Team ${teamNo(team)} wins the round!`, `${S.wins[team]} / ${S.need}${teamNames[team] ? ' · ' + teamNames[team] : ''}`, 2400);
+    toast(`🏁 Team ${teamNo(team)} wins the round!`, `${S.wins[team]} round win${S.wins[team] > 1 ? 's' : ''}${teamNames[team] ? ' · ' + teamNames[team] : ''}`, 2400);
   }
   function celebrateChampion(team) {
     if (REDUCED) return;
@@ -625,6 +653,7 @@
   function buildShuffleInfo() {   // side panel while the receiver is picked: every team shuffles its cards
     const w = mk('div', 'shufinfo');
     w.append(mk('div', 'big', '🔀 Shuffle your cards!'));
+    if (tieNote()) w.append(mk('div', 'callout', tieNote()));
     const row = mk('div', 'shufteams');
     TEAM_ORDER.forEach((n, i) => {
       const t = mk('div', 'tsh', (window.TEAM_AVATARS || {})[n] || '');
@@ -754,32 +783,62 @@
     });
     go(); tourEvery(go, 3200);
   }
-  function sceneWin(st) {
-    const ava = mk('div', 'tour-winava', (window.TEAM_AVATARS || {})[5] || ''), trophy = mk('div', 'tour-trophy', '🏆');
-    const stars = mk('div', 'tour-stars'), bs = [0, 1, 2].map(() => { const b = mk('b', null, '★'); stars.append(b); return b; });
-    st.append(ava, stars, trophy);
-    const [W, H] = stageSize(st);
+  function sceneWin(st) {   // after the last round the team with the most wins is the champion
+    const ids = [3, 5, 8], row = mk('div', 'tour-score');
+    const cells = ids.map((n) => {
+      const c = mk('div', 'ts', (window.TEAM_AVATARS || {})[n] || ''), cnt = mk('b', null, '0'), crown = mk('em', null, '👑');
+      c.append(crown, cnt, mk('span', null, `Team ${n}`)); row.append(c); return { c, cnt, crown };
+    });
+    const trophy = mk('div', 'tour-trophy', '🏆'); st.append(row, trophy);
+    const [W, H] = stageSize(st), seq = [1, 0, 1, 2, 1, 2];   // who wins each round: team 5 ends on 3, team 8 on 2, team 3 on 1
     const cycle = () => {
-      bs.forEach((b) => b.classList.remove('on')); trophy.style.opacity = 0;
-      bs.forEach((b, i) => tourLater(() => { b.classList.add('on'); burst(W / 2 + (i - 1) * 50, 150, 10, 40, st); }, 700 + i * 900));
+      cells.forEach((x) => { x.cnt.textContent = '0'; x.crown.style.opacity = 0; x.c.classList.remove('lead'); }); trophy.style.opacity = 0;
+      seq.forEach((ti, k) => tourLater(() => {
+        const x = cells[ti]; x.cnt.textContent = String(Number(x.cnt.textContent) + 1);
+        x.cnt.animate([{ transform: 'scale(1.6)' }, { transform: 'scale(1)' }], { duration: 300 });
+        burst(W / 2 + (ti - 1) * 92, 90, 8, 36, st);
+      }, 700 + k * 700));
       tourLater(() => {
-        trophy.style.opacity = 1; trophy.animate([{ transform: 'scale(.3)' }, { transform: 'scale(1.2)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 500 });
+        cells[1].crown.style.opacity = 1; cells[1].c.classList.add('lead'); trophy.style.opacity = 1;
+        trophy.animate([{ transform: 'scale(.3)' }, { transform: 'scale(1.2)', offset: 0.6 }, { transform: 'scale(1)' }], { duration: 500 });
         for (let i = 0; i < 22; i++) tourLater(() => {
           const s = mk('div', 'spark', pick(SPARK_GLYPHS)); s.style.left = Math.round(rnd() * W) + 'px'; s.style.top = '-20px'; s.style.fontSize = (12 + rnd() * 18) + 'px'; s.style.color = pick(SPARK_COLORS); st.append(s);
           s.animate([{ transform: 'translateY(0) rotate(0deg)', opacity: 1 }, { transform: `translateY(${H + 40}px) rotate(${Math.round(rnd() * 540)}deg)`, opacity: 0.9 }], { duration: 1600 + rnd() * 1000, easing: 'ease-in' }).onfinish = () => s.remove();
         }, i * 70);
-      }, 700 + 3 * 900);
-      tourLater(cycle, 7600);
+      }, 700 + seq.length * 700 + 300);
+      tourLater(cycle, 9400);
+    };
+    cycle();
+  }
+  function sceneTie(st) {   // teams tied on wins: an extra round, only for them
+    const ids = [2, 4, 6, 8, 0], row = mk('div', 'tour-score'); row.style.gap = '10px';
+    const cells = ids.map((n) => {
+      const c = mk('div', 'ts', (window.TEAM_AVATARS || {})[n] || ''), cnt = mk('b', null, '1'), crown = mk('em', null, '👑');
+      c.style.width = '62px'; c.append(crown, cnt, mk('span', null, `Team ${teamNo(n)}${n === 0 ? ' 🚫' : ''}`)); row.append(c); return { c, cnt, crown };
+    });
+    const label = mk('div', 'tour-tie', ''); st.append(row, label);
+    const [W] = stageSize(st);
+    const cycle = () => {
+      cells.forEach((x) => { x.cnt.textContent = '1'; x.crown.style.opacity = 0; x.c.classList.remove('lead', 'out'); });
+      label.textContent = '⚔️ Tied on 1 win each…';
+      tourLater(() => { label.textContent = '⚔️ Tie-break round: only these teams can win!'; cells.forEach((x) => x.c.animate([{ transform: 'translateY(0)' }, { transform: 'translateY(-10px)' }, { transform: 'translateY(0)' }], { duration: 500 })); }, 1800);
+      tourLater(() => {
+        cells.forEach((x, i) => { if (i !== 2) x.c.classList.add('out'); });
+        cells[2].cnt.textContent = '2'; cells[2].c.classList.add('lead'); cells[2].crown.style.opacity = 1;
+        burst(W / 2, 90, 22, 90, st); label.textContent = '🏆 One team wins the tie-break: champion!';
+      }, 4200);
+      tourLater(cycle, 8600);
     };
     cycle();
   }
   const TOUR = [
-    { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: () => `10 teams. Every round the fairy conjures ${S.cpr} cards. The first team to win ${S.need} rounds wins the game!` },
+    { title: 'Welcome to Uno Fairy', scene: sceneWelcome, text: () => `10 teams, ${S.rounds} rounds. Every round the fairy conjures ${S.cpr} cards. The team with the most round wins is the champion!` },
     { title: '1 · Pick the receiver & shuffle', scene: scenePick, text: () => 'One of the organisers is picked at random as the receiver. While the names spin, every team SHUFFLES its cards!' },
     { title: '2 · The fairy conjures the cards', scene: sceneConjure, text: () => `The fairy creates ${S.cpr} cards, each with a colour and a number. The 0 is played with the ban card 🚫.` },
     { title: '3 · Race to the receiver', scene: sceneRace, text: () => 'Find those cards in your hand (same colour AND number) and run to the receiver with all of them. The first team there wins the round!' },
     { title: '4 · Cards back, new round', scene: sceneReturn, text: () => 'All teams take their cards back, shuffle again, and a new receiver is picked for the next round.' },
-    { title: '5 · Win the game', scene: sceneWin, text: () => `The first team to win ${S.need} rounds is the champion! Keep an eye on the scoreboard.` },
+    { title: '5 · Most wins is the champion', scene: sceneWin, text: () => `After round ${S.rounds}, the team with the most round wins takes the game.` },
+    { title: '6 · Tied? One more round!', scene: sceneTie, text: () => 'If several teams share the most wins, they play extra tie-break rounds. Only the tied teams can win, until one of them does.' },
   ];
   function showStep(i) {
     tourClean.forEach((f) => f()); tourClean = []; clearTimeout(tourTimer);
@@ -803,7 +862,7 @@
   function openTour() { tourAuto = true; $('tour').classList.remove('hidden'); showStep(0); }
   function closeTour() {
     tourTok++; $('tour').classList.add('hidden'); tourClean.forEach((f) => f()); tourClean = []; clearTimeout(tourTimer);
-    try { localStorage.setItem('unoTour.v2', '1'); } catch {}
+    try { localStorage.setItem('unoTour.v3', '1'); } catch {}
   }
   const tourGo = (d) => { tourAuto = false; if (d > 0 && tourStep === TOUR.length - 1) closeTour(); else showStep(tourStep + d); };
 
@@ -812,7 +871,7 @@
   $('undo').onclick = undo;
   $('reset').onclick = newGame;
   $('clearPicked').onclick = () => { S.picked = []; save(); renderPoolList(); $('poolMsg').textContent = 'Everyone can be picked again.'; };
-  ['cpr', 'need', 'secs'].forEach((id) => { $(id).addEventListener('change', readSettings); });
+  ['cpr', 'rounds', 'secs'].forEach((id) => { $(id).addEventListener('change', readSettings); });
   $('fs').onclick = () => { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {}); };
   $('helpBtn').onclick = openTour;
   $('tourX').onclick = closeTour; $('tourSkip').onclick = closeTour;
@@ -826,7 +885,7 @@
   });
   ready = true;
   renderAll(); scheduleEstimate();
-  try { if (!localStorage.getItem('unoTour.v2')) setTimeout(openTour, 700); } catch {}   // first visit: show the guide
+  try { if (!localStorage.getItem('unoTour.v3')) setTimeout(openTour, 700); } catch {}   // first visit: show the guide
 </script>
 </body>
 </html>
