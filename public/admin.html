@@ -5,14 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin - Teams</title>
 <style>
-  :root { --bg:#f5f6fa; --card:#fff; --text:#1b1f2a; --muted:#667; --accent:#3057e8; --line:#8883; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#12141a; --card:#1c1f28; --text:#eceef5; --muted:#9aa; --accent:#6f8dff; } }
+  :root {
+  /* SECUTIX brand toolkit (April 2022): Burgundy #B40050 + Orange #FF5500, Dark Grey for text, hero gradient at 30 deg */
+  --burg:#B40050; --burg-dark:#8C0046; --burg-mid:#C8508C; --burg-light:#DC9BBE;
+  --orange:#FF5500; --orange-dark:#C82D00; --orange-mid:#FF8255; --orange-light:#FFB491;
+  --ink:#3C4B55; --ink-mid:#697378; --paper:#F0F0F0; --ok:#006E5F; --bad:#96231E;
+  --grad:linear-gradient(30deg, #B40050 20%, 40%, #FF5500 100%);
+  --font:"Proxima Nova", Calibri, "Segoe UI", system-ui, sans-serif;
+    --bg:var(--paper); --card:#fff; --text:var(--ink); --muted:var(--ink-mid); --accent:var(--burg); --line:rgba(60,75,85,.2);
+  }
   * { box-sizing: border-box; }
-  body { margin:0; padding:12px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  body { margin:0; padding:18px 12px 12px; background:var(--bg); color:var(--text); font:16px/1.4 var(--font); border-top:8px solid transparent; border-image:var(--grad) 1; }
   .wrap { max-width:none; margin:0 auto; display:grid; gap:16px; grid-template-columns: 280px 1fr; align-items:start; }
   @media (max-width:800px) { .wrap { grid-template-columns:1fr; } }
-  .card { background:var(--card); padding:20px; border-radius:16px; box-shadow:0 4px 24px #0002; }
-  h1,h2 { margin:0 0 12px; font-size:1.2rem; }
+  .card { background:var(--card); padding:20px; border-radius:16px; box-shadow:0 4px 24px rgba(60,75,85,.15); }
+  h1,h2 { margin:0 0 12px; font-size:1.2rem; font-weight:700; color:var(--burg); text-transform:uppercase; letter-spacing:.06em; }
   #qr svg { width:100%; height:auto; background:#fff; border-radius:8px; }
   #url { word-break:break-all; color:var(--muted); font-size:.85rem; margin-top:8px; }
   table { width:100%; border-collapse:collapse; }
@@ -21,7 +28,9 @@
   .bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
   .bar span { color:var(--muted); margin-right:auto; }
   button, a.btn { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:transparent; color:inherit; cursor:pointer; text-decoration:none; }
-  button.danger { color:#c62828; }
+  button.danger { color:var(--bad); }
+  button.primary { background:var(--burg); color:#fff; border-color:var(--burg); }
+  button:hover, a.btn:hover { background:rgba(180,0,80,.07); }
   .scroll { max-height:70vh; overflow:auto; }
   .tabs { display:flex; gap:6px; margin-bottom:12px; }
   .tabs button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -31,7 +40,7 @@
   .team-card { border:1px solid var(--line); border-radius:12px; padding:12px; }
   .team-card.empty { opacity:.45; }
   .team-card h3 { margin:0 0 8px; font-size:1rem; display:flex; justify-content:space-between; }
-  .team-card h3 b { color:var(--accent); }
+  .team-card h3 b { color:var(--burg); }
   .team-card ol { margin:0; padding:0; list-style:none; }
   .team-card li { padding:4px 0; border-top:1px solid var(--line); font-size:.92rem; word-break:break-word; }
   .team-card li small { color:var(--muted); margin-right:6px; }
@@ -118,7 +127,7 @@
       card.className = 'team-card' + (members.length ? '' : ' empty');
       const h = document.createElement('h3');
       h.innerHTML = '<b></b><span></span>';
-      h.firstChild.textContent = `Team ${t === 0 ? 10 : t}${t === 0 ? ' 🚫' : ''}` + (teamNames[t] ? ` · ${teamNames[t]}` : '');
+      h.firstChild.textContent = `Team ${t === 0 ? 10 : t}` + (teamNames[t] ? ` · ${teamNames[t]}` : '');
       h.lastChild.textContent = members.length;
       const ol = document.createElement('ol');
       members.forEach((m) => {

@@ -5,16 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin login</title>
 <style>
-  :root { --bg:#f5f6fa; --card:#fff; --text:#1b1f2a; --muted:#667; --accent:#3057e8; --err:#c62828; }
-  @media (prefers-color-scheme: dark) { :root { --bg:#12141a; --card:#1c1f28; --text:#eceef5; --muted:#9aa; --accent:#6f8dff; --err:#ff8a80; } }
+  :root {
+  /* SECUTIX brand toolkit (April 2022): Burgundy #B40050 + Orange #FF5500, Dark Grey for text, hero gradient at 30 deg */
+  --burg:#B40050; --burg-dark:#8C0046; --burg-mid:#C8508C; --burg-light:#DC9BBE;
+  --orange:#FF5500; --orange-dark:#C82D00; --orange-mid:#FF8255; --orange-light:#FFB491;
+  --ink:#3C4B55; --ink-mid:#697378; --paper:#F0F0F0; --ok:#006E5F; --bad:#96231E;
+  --grad:linear-gradient(30deg, #B40050 20%, 40%, #FF5500 100%);
+  --font:"Proxima Nova", Calibri, "Segoe UI", system-ui, sans-serif;
+    --text:var(--ink); --muted:var(--ink-mid); --card:#fff; --accent:var(--burg); --err:var(--bad);
+  }
   * { box-sizing: border-box; }
-  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:16px; background:var(--bg); color:var(--text); font:16px/1.4 system-ui, sans-serif; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; padding:16px; background:#B40050 var(--grad) fixed; color:var(--text); font:16px/1.4 var(--font); }
   main { width:100%; max-width:380px; background:var(--card); padding:28px 22px; border-radius:16px; box-shadow:0 4px 24px #0002; }
-  h1 { margin:0 0 16px; font-size:1.4rem; text-align:center; }
+  h1 { margin:0 0 16px; font-size:1.4rem; text-align:center; font-weight:700; color:var(--burg); text-transform:uppercase; letter-spacing:.06em; }
   label { display:block; color:var(--muted); font-size:.85rem; margin:0 0 4px; }
   input, button { width:100%; font:inherit; padding:12px; border-radius:10px; }
   input { border:1px solid #8886; background:transparent; color:inherit; margin-bottom:12px; }
-  button { border:0; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  button { border:0; background:var(--accent); color:#fff; font-weight:700; cursor:pointer; }
+  button:hover { background:var(--burg-dark); }
   button:disabled { opacity:.6; }
   .err { color:var(--err); min-height:1.2em; margin-top:10px; text-align:center; }
 </style>
