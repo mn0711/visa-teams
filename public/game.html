@@ -33,7 +33,8 @@
   .logo svg { width:100%; height:100%; }
 
   /* cards area */
-  .stage { width:100%; max-width:1100px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .area { width:100%; max-width:1100px; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  .side { width:100%; display:flex; flex-direction:column; align-items:center; gap:12px; }
   #cardWrap { position:relative; width:100%; min-height:min(46vh,400px); perspective:1100px; isolation:isolate; }
   #card { display:flex; gap:clamp(8px,2vw,22px); justify-content:center; align-items:center; width:100%; min-height:min(46vh,400px); }
   .pc { height:min(46vh,400px,calc((100vw - 48px) / 3 * 1.5)); aspect-ratio:2/3; filter:drop-shadow(0 14px 22px rgba(60,0,30,.45)); }
@@ -160,6 +161,26 @@
   .ts.lead b { color:var(--orange-light); } .ts.out { opacity:.35; }
   .tour-tie { position:absolute; left:0; right:0; bottom:14px; font-size:1.05rem; font-weight:700; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.5); }
   .tour-trophy { position:absolute; left:50%; top:178px; width:100px; margin-left:-50px; font-size:64px; line-height:1; filter:drop-shadow(0 0 20px #fff); opacity:0; }
+  /* desktop: the cards / shuffling deck sit next to the info + receiver panel, so nothing needs scrolling */
+  @media (min-width: 980px) {
+    .area { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:18px; align-items:center; }
+    #cardWrap, #card { min-height:min(38vh,330px); }
+    .pc { height:auto; width:min(calc((100% - 44px) / 3), 25vh); }
+    .bigdeck { width:min(38vh,330px,100%); }
+    .side .info, .side .action { max-width:none; }
+    .info { padding:14px 16px; } .action { padding:12px; gap:8px; }
+    .info .big { font-size:clamp(1.3rem,2.2vw,1.9rem); }
+    .pava { width:64px; height:64px; }
+    .pname, .spin { font-size:clamp(1.3rem,2.4vw,1.9rem); }
+    .callout { font-size:clamp(.95rem,1.5vw,1.2rem); padding:8px 14px; }
+    .shufteams { margin:6px 0 8px; gap:6px 4px; }
+    .tsh > svg { width:24px; height:24px; } .sdeck { width:22px; height:32px; margin:3px auto 4px; }
+    .teamsel { gap:4px; flex-wrap:nowrap; } .tsel { width:38px; padding:3px 0; font-size:.7rem; } .tsel svg { width:24px; height:24px; }
+    .draw { font-size:1.15rem; padding:11px 34px; box-shadow:0 4px 0 var(--burg-dark); }
+    .teams { margin-top:2px; }
+    .action .sub { font-size:.9rem; } .action .who { font-size:clamp(1.05rem,1.8vw,1.4rem); }
+    .info .sub { font-size:.9rem; }
+  }
   .hidden { display:none !important; }
 </style>
 </head>
@@ -173,12 +194,13 @@
   <a class="btn" href="/admin">← Admin</a>
 </div>
 
-<div class="stage">
+<div class="area">
   <div id="cardWrap"><div id="card"></div><div id="fx"></div></div>
-  <div class="info" id="info"></div>
+  <div class="side">
+    <div class="info" id="info"></div>
+    <div class="action hidden" id="action"></div>
+  </div>
 </div>
-
-<div class="action hidden" id="action"></div>
 <button class="draw" id="draw"></button>
 <div class="hist" id="hist" aria-label="Previous rounds"></div>
 <div class="teams" id="teams"></div>
@@ -405,10 +427,9 @@
     };
     // Stage 1: pick the receiver (teams shuffle). Stage 2: the fairy conjures the cards.
     if (!c.cards) {
-      if (spinText != null) { add('div', 'spin', spinText); add('div', 'callout', SHUFFLE_CALLOUT); return; }
-      if (!c.person) { add('div', 'callout', SHUFFLE_CALLOUT); add('button', 'primary', '🎲 Pick the receiver').onclick = pickPerson; return; }
+      if (spinText != null) { add('div', 'spin', spinText); return; }
+      if (!c.person) { add('button', 'primary', '🎲 Pick the receiver').onclick = pickPerson; return; }
       showPerson();
-      add('div', 'callout', SHUFFLE_CALLOUT);
       const r = add('div', 'row');
       add('button', null, '🎲 Pick again', r).onclick = pickPerson;
       add('button', 'primary', `🧚 Conjure ${S.cpr} card${S.cpr > 1 ? 's' : ''}`, r).onclick = conjureCards;
