@@ -20,8 +20,18 @@ if (!process.env.ADMIN_PASSWORD) console.warn('WARNING: ADMIN_PASSWORD not set, 
 // Rule: team = last digit of the order number (11 -> 1, 33 -> 3, 20 -> 0).
 const teamOf = (order) => order % 10;
 // Funny team names, index = team digit (0-9). Override with TEAM_NAMES="a,b,c,...,j" (10 comma-separated names).
-const DEFAULT_TEAM_NAMES = ['Bánh Chưng Bánh Giầy', 'Phở Không Hành', 'Trà Đá Vỉa Hè', 'Cà Phê Muối', 'Chú Cuội Cung Trăng',
-  'Thánh Gióng Phi Ngựa', 'Sơn Tinh Thủy Tinh', 'Trạng Quỳnh', 'Ông Táo Lên Trời', 'Cóc Kiện Trời'];
+const DEFAULT_TEAM_NAMES = [
+  'Hội Đá Banh Xứ Băng (KSI – Iceland)',   // 0 = Team 10
+  'Hội Đá Banh Toàn Cầu (FIFA)',            // 1
+  'Quả Bóng Châu Âu (UEFA)',                // 2
+  'Hội Đánh Vợt Bãi Cỏ (AELTC – Wimbledon)', // 3
+  'Giải Mở Cửa (THEOPEN)',                  // 4
+  'Hội Đập Dế (ECB – cricket Anh)',         // 5
+  'Nước Rửa Chén (AJAX)',                   // 6
+  'Lễ Hội Người Tiền Sử (PALEO Festival)',  // 7
+  'Gánh Hát Paris (ONP – Opéra de Paris)',  // 8
+  'Hòn Đá Bạc (Silverstone)',               // 9
+];
 const custom = (process.env.TEAM_NAMES || '').split(',').map((n) => n.trim());
 const TEAM_NAMES = custom.length === 10 && custom.every(Boolean) ? custom : DEFAULT_TEAM_NAMES;
 const named = (e) => ({ ...e, teamName: TEAM_NAMES[e.team] });
